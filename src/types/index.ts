@@ -1,0 +1,289 @@
+// Core Alert Types
+export type AlertType = 'INVENTORY' | 'ORDER' | 'EQUIPMENT' | 'STAFF' | 'CUSTOMER' | 'FINANCIAL';
+export type AlertPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+export type RestaurantType = 'FAST_CASUAL' | 'FINE_DINING' | 'COFFEE_SHOP' | 'BAR';
+
+export interface Alert {
+  id: string;
+  type: AlertType;
+  priority: AlertPriority;
+  title: string;
+  message: string;
+  timestamp: Date;
+  acknowledged: boolean;
+  acknowledgedAt?: Date;
+  acknowledgedBy?: string;
+  resolved: boolean;
+  resolvedAt?: Date;
+  read: boolean;
+  readAt?: Date;
+  data: Record<string, any>;
+  notificationId?: string;
+  notificationSent: boolean;
+  notificationScheduledAt?: Date;
+  shouldNotify: boolean;
+}
+
+export interface Restaurant {
+  id: string;
+  name: string;
+  type: RestaurantType;
+  alerts: Alert[];
+}
+
+// Notification Types
+export interface NotificationPayload {
+  title: string;
+  body: string;
+  data: {
+    alertId: string;
+    type: AlertType;
+    priority: AlertPriority;
+  };
+  sound?: string;
+  badge?: number;
+  categoryId: string;
+}
+
+export interface NotificationResponse {
+  notification: NotificationPayload;
+  actionIdentifier: string;
+  userText?: string;
+}
+
+export type NotificationPermissionStatus = 'granted' | 'denied' | 'undetermined';
+
+export interface NotificationSettings {
+  allowNotifications: boolean;
+  allowCritical: boolean;
+  allowHigh: boolean;
+  allowMedium: boolean;
+  allowLow: boolean;
+  quietHours: {
+    enabled: boolean;
+    start: string; // HH:MM format
+    end: string;   // HH:MM format
+  };
+  maxPerHour: number;
+  customSounds: boolean;
+  vibration: boolean;
+}
+
+// User Preferences
+export interface UserPreferences {
+  notifications: NotificationSettings;
+  filters: {
+    showResolved: boolean;
+    selectedTypes: AlertType[];
+    selectedPriorities: AlertPriority[];
+  };
+  ui: {
+    darkMode: boolean;
+    compactView: boolean;
+  };
+}
+
+// App State Types
+export interface AppState {
+  alerts: Alert[];
+  preferences: UserPreferences;
+  permissionsGranted: boolean;
+  isLoading: boolean;
+  currentRestaurant: Restaurant | null;
+  lastUpdated: Date;
+}
+
+// Mock Data Types
+export type DemoScenario = 'BUSY_LUNCH_RUSH' | 'MORNING_PREP' | 'EVENING_SERVICE';
+
+export interface MockDataContext {
+  scenario: DemoScenario;
+  restaurantType: RestaurantType;
+  timeOfDay: 'MORNING' | 'AFTERNOON' | 'EVENING' | 'NIGHT';
+  dayOfWeek: 'WEEKDAY' | 'WEEKEND';
+}
+
+// Action Types
+export type AlertAction = 
+  | { type: 'ACKNOWLEDGE_ALERT'; alertId: string; userId: string }
+  | { type: 'RESOLVE_ALERT'; alertId: string }
+  | { type: 'DISMISS_ALERT'; alertId: string }
+  | { type: 'MARK_READ'; alertId: string }
+  | { type: 'ADD_ALERT'; alert: Alert }
+  | { type: 'UPDATE_PREFERENCES'; preferences: UserPreferences };
+
+// Service Response Types
+export interface ServiceResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  timestamp: Date;
+}
+
+// Testing Types
+export type TestScenario = 'PERFORMANCE_TEST' | 'NOTIFICATION_TEST' | 'UI_TEST' | 'INTEGRATION_TEST';
+
+export interface TestDataSet {
+  alerts: Alert[];
+  restaurants?: Restaurant[];
+  notificationSettings?: NotificationSettings;
+  userInteractions?: any[];
+}
+
+// Error Types
+export type ErrorType = 'NETWORK_ERROR' | 'STORAGE_ERROR' | 'NOTIFICATION_ERROR' | 'PERMISSION_ERROR';
+
+export interface AppError {
+  type: ErrorType;
+  message: string;
+  context?: string;
+  timestamp: Date;
+  recoverable: boolean;
+}
+
+export type RecoveryAction = 
+  | 'SHOW_CACHED'
+  | 'RETRY_PROMPT'
+  | 'REINITIALIZE'
+  | 'DEGRADE_GRACEFULLY'
+  | 'RESTART_REQUIRED';
+
+// Notification Category Types
+export interface NotificationCategory {
+  identifier: string;
+  actions: NotificationAction[];
+  options?: {
+    customDismissAction?: boolean;
+    allowInCarPlay?: boolean;
+    showTitle?: boolean;
+    showSubtitle?: boolean;
+  };
+}
+
+export interface NotificationAction {
+  identifier: string;
+  title: string;
+  options?: {
+    destructive?: boolean;
+    authenticationRequired?: boolean;
+    foreground?: boolean;
+  };
+}
+
+// Component Props Types
+export interface AlertItemProps {
+  alert: Alert;
+  onPress: (alert: Alert) => void;
+  onAcknowledge: (alertId: string) => void;
+  onDismiss: (alertId: string) => void;
+}
+
+export interface AlertDashboardProps {
+  alerts: Alert[];
+  filters: UserPreferences['filters'];
+  onAlertPress: (alert: Alert) => void;
+  onRefresh: () => void;
+  isRefreshing: boolean;
+}
+
+// Navigation types (for our new screens)
+export type RootStackParamList = {
+  Home: undefined;
+  Login: undefined;
+  Register: undefined;
+  Dashboard: undefined;
+  Alerts: undefined;
+  AlertDetail: { alertId: string };
+  Profile: undefined;
+  Settings: undefined;
+  NotificationSettings: undefined;
+};
+
+export type TabParamList = {
+  Dashboard: undefined;
+  Alerts: undefined;
+  Profile: undefined;
+};
+
+// Form types
+export interface LoginForm {
+  email: string;
+  password: string;
+}
+
+export interface RegisterForm {
+  name: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  restaurantName: string;
+}
+
+// User types
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  avatar?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// Component Props types
+export interface LoadingProps {
+  size?: 'small' | 'large';
+  color?: string;
+  text?: string;
+}
+
+export interface EmptyStateProps {
+  title: string;
+  message: string;
+  actionText?: string;
+  onAction?: () => void;
+  icon?: string;
+}
+
+// API Response types (additional to existing ServiceResponse)
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
+}
+
+export interface PaginatedResponse<T> extends ApiResponse<T[]> {
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+// Alert State Types
+export interface AlertFilters {
+  priority?: AlertPriority;
+  type?: AlertType;
+  status?: 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED' | 'DISMISSED';
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+  search: string;
+  tags?: string[];
+  showRead: boolean;
+  showResolved: boolean;
+}
+
+export interface AlertState {
+  alerts: Alert[];
+  activeAlerts: Alert[];
+  history: Alert[];
+  filters: AlertFilters;
+  loading: boolean;
+  error: string | null;
+  lastUpdated: number;
+  unreadCount: number;
+  criticalCount: number;
+}
