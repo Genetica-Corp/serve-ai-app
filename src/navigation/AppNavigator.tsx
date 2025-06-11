@@ -1,135 +1,104 @@
 import React from 'react';
+import { Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { createStackNavigator } from '@react-navigation/stack';
 
-// Import screens (these will be created by other agents)
-import HomeScreen from '@/screens/HomeScreen';
-import LoginScreen from '@/screens/auth/LoginScreen';
-import RegisterScreen from '@/screens/auth/RegisterScreen';
-import DashboardScreen from '@/screens/DashboardScreen';
-import AlertsScreen from '@/screens/AlertsScreen';
-import AlertDetailScreen from '@/screens/AlertDetailScreen';
-import ProfileScreen from '@/screens/ProfileScreen';
-import SettingsScreen from '@/screens/SettingsScreen';
-import NotificationSettingsScreen from '@/screens/NotificationSettingsScreen';
+// Import screens
+import { AlertDashboard } from '../screens/AlertDashboard';
+import { DashboardScreen } from '../screens/DashboardScreen';
+import { AlertsScreen } from '../screens/AlertsScreen';
+import { AlertDetailScreen } from '../screens/AlertDetailScreen';
+import { SettingsScreen } from '../screens/SettingsScreen';
+import { NotificationSettingsScreen } from '../screens/NotificationSettingsScreen';
 
-import { RootStackParamList, TabParamList } from '@/types';
+// Types
+import { RootStackParamList, TabParamList } from '../types';
 
-const Stack = createStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<TabParamList>();
+const Stack = createStackNavigator<RootStackParamList>();
 
-// Main Tab Navigator
 function TabNavigator() {
   return (
     <Tab.Navigator
-      screenOptions={({ route }) => ({
-        tabBarIcon: ({ focused, color, size }) => {
-          let iconName: string;
-
-          switch (route.name) {
-            case 'Dashboard':
-              iconName = focused ? 'dashboard' : 'dashboard';
-              break;
-            case 'Alerts':
-              iconName = focused ? 'notifications' : 'notifications-none';
-              break;
-            case 'Profile':
-              iconName = focused ? 'person' : 'person-outline';
-              break;
-            default:
-              iconName = 'help';
-          }
-
-          return <Icon name={iconName} size={size} color={color} />;
-        },
-        tabBarActiveTintColor: '#2196F3',
-        tabBarInactiveTintColor: 'gray',
+      screenOptions={{
         headerShown: false,
-      })}
+        tabBarActiveTintColor: '#3B82F6',
+        tabBarInactiveTintColor: '#6B7280',
+      }}
     >
-      <Tab.Screen 
-        name="Dashboard" 
-        component={DashboardScreen}
-        options={{ title: 'Dashboard' }}
+      <Tab.Screen
+        name="Dashboard"
+        component={AlertDashboard}
+        options={{
+          tabBarLabel: 'Dashboard',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 20, color }}>📊</Text>
+          ),
+        }}
       />
-      <Tab.Screen 
-        name="Alerts" 
+      <Tab.Screen
+        name="Alerts"
         component={AlertsScreen}
-        options={{ title: 'Alerts' }}
+        options={{
+          tabBarLabel: 'Alerts',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 20, color }}>🚨</Text>
+          ),
+        }}
       />
-      <Tab.Screen 
-        name="Profile" 
-        component={ProfileScreen}
-        options={{ title: 'Profile' }}
+      <Tab.Screen
+        name="Profile"
+        component={SettingsScreen}
+        options={{
+          tabBarLabel: 'Settings',
+          tabBarIcon: ({ color }) => (
+            <Text style={{ fontSize: 20, color }}>⚙️</Text>
+          ),
+        }}
       />
     </Tab.Navigator>
   );
 }
 
-// Root Stack Navigator
-export default function AppNavigator() {
-  // TODO: Add authentication state management here
-  const isAuthenticated = false; // This will be managed by auth service
-
+export function AppNavigator() {
   return (
     <NavigationContainer>
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#2196F3',
+            backgroundColor: '#3B82F6',
           },
-          headerTintColor: '#fff',
+          headerTintColor: '#FFFFFF',
           headerTitleStyle: {
-            fontWeight: 'bold',
+            fontWeight: '600',
           },
         }}
       >
-        {!isAuthenticated ? (
-          // Auth Stack
-          <>
-            <Stack.Screen 
-              name="Home" 
-              component={HomeScreen}
-              options={{ title: 'Serve AI' }}
-            />
-            <Stack.Screen 
-              name="Login" 
-              component={LoginScreen}
-              options={{ title: 'Sign In' }}
-            />
-            <Stack.Screen 
-              name="Register" 
-              component={RegisterScreen}
-              options={{ title: 'Sign Up' }}
-            />
-          </>
-        ) : (
-          // App Stack
-          <>
-            <Stack.Screen 
-              name="Dashboard" 
-              component={TabNavigator}
-              options={{ headerShown: false }}
-            />
-            <Stack.Screen 
-              name="AlertDetail" 
-              component={AlertDetailScreen}
-              options={{ title: 'Alert Details' }}
-            />
-            <Stack.Screen 
-              name="Settings" 
-              component={SettingsScreen}
-              options={{ title: 'Settings' }}
-            />
-            <Stack.Screen 
-              name="NotificationSettings" 
-              component={NotificationSettingsScreen}
-              options={{ title: 'Notification Settings' }}
-            />
-          </>
-        )}
+        <Stack.Screen
+          name="Dashboard"
+          component={TabNavigator}
+          options={{ 
+            title: 'Serve AI Restaurant Alerts',
+            headerShown: true,
+          }}
+        />
+        <Stack.Screen
+          name="AlertDetail"
+          component={AlertDetailScreen}
+          options={{ 
+            title: 'Alert Details',
+            headerBackTitleVisible: false,
+          }}
+        />
+        <Stack.Screen
+          name="NotificationSettings"
+          component={NotificationSettingsScreen}
+          options={{ 
+            title: 'Notification Settings',
+            headerBackTitleVisible: false,
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

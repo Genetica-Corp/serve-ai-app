@@ -1,18 +1,31 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
-import { EmptyStateProps } from '@/types';
+import {
+  View,
+  Text,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 
-const EmptyState: React.FC<EmptyStateProps> = ({
-  title,
-  message,
-  actionText,
+export interface EmptyStateProps {
+  title: string;
+  message: string;
+  actionText?: string;
+  onAction?: () => void;
+  icon?: string;
+}
+
+export function EmptyState({ 
+  title, 
+  message, 
+  actionText, 
   onAction,
-  icon = 'inbox',
-}) => {
+  icon 
+}: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      <Icon name={icon} size={64} color="#ccc" />
+      {icon && (
+        <Text style={styles.icon}>{icon}</Text>
+      )}
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
       {actionText && onAction && (
@@ -22,41 +35,42 @@ const EmptyState: React.FC<EmptyStateProps> = ({
       )}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 40,
+    padding: 32,
+  },
+  icon: {
+    fontSize: 48,
+    marginBottom: 16,
   },
   title: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-    marginTop: 16,
+    fontWeight: '600',
+    color: '#111827',
     textAlign: 'center',
+    marginBottom: 8,
   },
   message: {
     fontSize: 16,
-    color: '#666',
-    marginTop: 8,
+    color: '#6B7280',
     textAlign: 'center',
-    lineHeight: 22,
+    lineHeight: 24,
+    marginBottom: 24,
   },
   button: {
-    backgroundColor: '#2196F3',
+    backgroundColor: '#3B82F6',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
-    marginTop: 24,
   },
   buttonText: {
-    color: '#fff',
+    color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });
-
-export default EmptyState;

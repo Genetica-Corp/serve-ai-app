@@ -1,31 +1,31 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { EmptyState } from '@/components';
+import { EmptyState } from '../components';
 
-const AlertsScreen: React.FC = () => {
+export function AlertsScreen() {
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Alerts</Text>
+      <Text style={styles.title}>All Alerts</Text>
       <View style={styles.contentContainer}>
         <EmptyState
-          title="No Alerts Yet"
-          message="Alert system implementation will be added by the Alert Management Agent"
-          icon="notifications-none"
+          title="Alert History"
+          message="View all alerts including resolved and dismissed items"
+          icon="📋"
         />
       </View>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: '#F9FAFB',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#333',
+    color: '#111827',
     padding: 20,
     paddingBottom: 0,
   },
@@ -33,5 +33,3 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 });
-
-export default AlertsScreen;

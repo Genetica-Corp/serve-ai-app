@@ -100,6 +100,10 @@ interface RestaurantContextInterface {
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   
+  // Mock data methods for demo
+  generateMockAlerts: (count: number) => Promise<void>;
+  loadDemoScenario: (scenario: string) => Promise<void>;
+  
   // Computed properties
   isRestaurantOpen: () => boolean;
   getCurrentCapacityPercentage: () => number;
@@ -300,6 +304,19 @@ export function RestaurantProvider({ children }: RestaurantProviderProps) {
     dispatch({ type: 'SET_ERROR', payload: error });
   };
 
+  // Mock data methods for demo
+  const generateMockAlerts = async (count: number): Promise<void> => {
+    // This would normally interface with the AlertContext
+    // For now, we'll just resolve
+    return Promise.resolve();
+  };
+
+  const loadDemoScenario = async (scenario: string): Promise<void> => {
+    // This would normally interface with the MockDataGenerator
+    // For now, we'll just resolve
+    return Promise.resolve();
+  };
+
   // Computed properties
   const isRestaurantOpen = (): boolean => {
     return isWithinOperatingHours();
@@ -396,6 +413,8 @@ export function RestaurantProvider({ children }: RestaurantProviderProps) {
     setSimulationActive,
     setLoading,
     setError,
+    generateMockAlerts,
+    loadDemoScenario,
     isRestaurantOpen,
     getCurrentCapacityPercentage,
     getOperatingHours,

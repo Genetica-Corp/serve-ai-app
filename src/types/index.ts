@@ -1,27 +1,63 @@
 // Core Alert Types
-export type AlertType = 'INVENTORY' | 'ORDER' | 'EQUIPMENT' | 'STAFF' | 'CUSTOMER' | 'FINANCIAL';
+export type AlertType = 'INVENTORY' | 'ORDER' | 'EQUIPMENT' | 'STAFF' | 'CUSTOMER' | 'FINANCIAL' | 'SAFETY' | 'HEALTH' | 'SECURITY';
 export type AlertPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
-export type RestaurantType = 'FAST_CASUAL' | 'FINE_DINING' | 'COFFEE_SHOP' | 'BAR';
+export type AlertStatus = 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED' | 'DISMISSED';
+export type RestaurantType = 'FAST_CASUAL' | 'FINE_DINING' | 'CAFE' | 'BAR' | 'FOOD_TRUCK' | 'CATERING';
 
 export interface Alert {
   id: string;
   type: AlertType;
   priority: AlertPriority;
+  status: AlertStatus;
   title: string;
   message: string;
-  timestamp: Date;
+  details?: string;
+  timestamp: number;
+  read: boolean;
   acknowledged: boolean;
+  resolved: boolean;
+  dismissed: boolean;
   acknowledgedAt?: Date;
   acknowledgedBy?: string;
-  resolved: boolean;
   resolvedAt?: Date;
-  read: boolean;
   readAt?: Date;
-  data: Record<string, any>;
-  notificationId?: string;
-  notificationSent: boolean;
-  notificationScheduledAt?: Date;
   shouldNotify: boolean;
+  notificationSent: boolean;
+  notificationId?: string;
+  notificationScheduledAt?: Date;
+  actionRequired: boolean;
+  estimatedResolutionTime?: number; // minutes
+  source: string;
+  tags: string[];
+}
+
+export interface RestaurantProfile {
+  id: string;
+  name: string;
+  type: RestaurantType;
+  address: string;
+  phone: string;
+  email: string;
+  capacity: number;
+  staffCount: number;
+  avgOrderTime: number; // minutes
+  specialties: string[];
+  peakHours: string[]; // array of hour strings like "12:00", "13:00"
+  hoursOfOperation: Record<string, { open: string; close: string; closed?: boolean }>;
+}
+
+export interface RestaurantContext {
+  profile: RestaurantProfile;
+  currentTime: number;
+  dayOfWeek: string;
+  isOpen: boolean;
+  currentCapacity: number;
+  activeOrders: number;
+  staffOnDuty: number;
+  recentAlerts: Alert[];
+  averageAlertFrequency: number;
+  demoMode: boolean;
+  simulationSpeed: number;
 }
 
 export interface Restaurant {
@@ -94,7 +130,25 @@ export interface AppState {
 }
 
 // Mock Data Types
-export type DemoScenario = 'BUSY_LUNCH_RUSH' | 'MORNING_PREP' | 'EVENING_SERVICE';
+export type DemoScenario = 
+  | 'BUSY_LUNCH_RUSH' 
+  | 'MORNING_PREP' 
+  | 'EVENING_SERVICE'
+  | 'EQUIPMENT_FAILURE'
+  | 'STAFF_SHORTAGE'
+  | 'INVENTORY_CRISIS'
+  | 'CUSTOMER_COMPLAINTS'
+  | 'HEALTH_INSPECTION'
+  | 'QUIET_PERIOD';
+
+export interface IMockDataGenerator {
+  generateDemoScenario(scenario: DemoScenario, context: RestaurantContext): Alert[];
+  generateRealisticAlerts(context: RestaurantContext, count: number): Alert[];
+  generateSingleAlert(context: RestaurantContext): Alert;
+  generateRestaurantProfile(type: RestaurantType): RestaurantProfile;
+  generateRestaurantContext(profile: RestaurantProfile): RestaurantContext;
+  calculateAlertProbability(currentTime: number, context: RestaurantContext): number;
+}
 
 export interface MockDataContext {
   scenario: DemoScenario;
@@ -105,12 +159,17 @@ export interface MockDataContext {
 
 // Action Types
 export type AlertAction = 
-  | { type: 'ACKNOWLEDGE_ALERT'; alertId: string; userId: string }
-  | { type: 'RESOLVE_ALERT'; alertId: string }
-  | { type: 'DISMISS_ALERT'; alertId: string }
-  | { type: 'MARK_READ'; alertId: string }
-  | { type: 'ADD_ALERT'; alert: Alert }
-  | { type: 'UPDATE_PREFERENCES'; preferences: UserPreferences };
+  | { type: 'SET_ALERTS'; payload: Alert[] }
+  | { type: 'ADD_ALERT'; payload: Alert }
+  | { type: 'UPDATE_ALERT'; payload: { id: string; updates: Partial<Alert> } }
+  | { type: 'ACKNOWLEDGE_ALERT'; payload: { id: string; userId?: string } }
+  | { type: 'RESOLVE_ALERT'; payload: string }
+  | { type: 'DISMISS_ALERT'; payload: string }
+  | { type: 'MARK_READ'; payload: string }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'UPDATE_FILTERS'; payload: Partial<AlertFilters> }
+  | { type: 'CLEAR_ALERTS' };
 
 // Service Response Types
 export interface ServiceResponse<T> {
@@ -265,7 +324,7 @@ export interface PaginatedResponse<T> extends ApiResponse<T[]> {
 export interface AlertFilters {
   priority?: AlertPriority;
   type?: AlertType;
-  status?: 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED' | 'DISMISSED';
+  status?: AlertStatus;
   dateRange?: {
     start: Date;
     end: Date;
@@ -287,3 +346,23 @@ export interface AlertState {
   unreadCount: number;
   criticalCount: number;
 }
+
+// Restaurant State Types
+export interface RestaurantState {
+  profile: RestaurantProfile | null;
+  context: RestaurantContext | null;
+  demoMode: boolean;
+  simulationActive: boolean;
+  loading: boolean;
+  error: string | null;
+}
+
+export type RestaurantAction =
+  | { type: 'SET_PROFILE'; payload: RestaurantProfile }
+  | { type: 'UPDATE_PROFILE'; payload: Partial<RestaurantProfile> }
+  | { type: 'SET_CONTEXT'; payload: RestaurantContext }
+  | { type: 'UPDATE_CONTEXT'; payload: Partial<RestaurantContext> }
+  | { type: 'SET_DEMO_MODE'; payload: boolean }
+  | { type: 'SET_SIMULATION_ACTIVE'; payload: boolean }
+  | { type: 'SET_LOADING'; payload: boolean }
+  | { type: 'SET_ERROR'; payload: string | null };

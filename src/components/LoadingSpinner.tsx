@@ -1,19 +1,29 @@
 import React from 'react';
-import { View, ActivityIndicator, Text, StyleSheet } from 'react-native';
-import { LoadingProps } from '@/types';
+import {
+  View,
+  ActivityIndicator,
+  Text,
+  StyleSheet,
+} from 'react-native';
 
-const LoadingSpinner: React.FC<LoadingProps> = ({ 
+export interface LoadingSpinnerProps {
+  size?: 'small' | 'large';
+  color?: string;
+  text?: string;
+}
+
+export function LoadingSpinner({ 
   size = 'large', 
-  color = '#2196F3', 
-  text 
-}) => {
+  color = '#3B82F6', 
+  text = 'Loading...' 
+}: LoadingSpinnerProps) {
   return (
     <View style={styles.container}>
       <ActivityIndicator size={size} color={color} />
       {text && <Text style={styles.text}>{text}</Text>}
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -23,11 +33,9 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   text: {
-    marginTop: 10,
+    marginTop: 16,
     fontSize: 16,
-    color: '#666',
+    color: '#6B7280',
     textAlign: 'center',
   },
 });
-
-export default LoadingSpinner;
