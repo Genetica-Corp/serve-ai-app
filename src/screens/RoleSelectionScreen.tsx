@@ -26,6 +26,7 @@ const RoleSelectionScreen: React.FC = () => {
   const { login, setTeamMembers } = useUser();
 
   const handleRoleSelection = async (role: 'operator' | 'manager') => {
+    console.log('Role selected:', role);
     try {
       let user;
       if (role === 'operator') {
@@ -35,19 +36,23 @@ const RoleSelectionScreen: React.FC = () => {
       }
 
       login(user);
+      console.log('User logged in:', user);
 
       // Load team members if operator
       if (role === 'operator') {
         const members = await UserService.getTeamMembers(user.id);
         setTeamMembers(members);
+        console.log('Team members loaded:', members.length);
       }
 
+      console.log('Navigating to Dashboard...');
       // Navigate to appropriate dashboard
       navigation.reset({
         index: 0,
         routes: [{ name: 'Dashboard' }],
       });
     } catch (error) {
+      console.error('Role selection error:', error);
       Alert.alert('Error', 'Failed to login. Please try again.');
     }
   };

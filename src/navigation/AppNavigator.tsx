@@ -9,7 +9,7 @@ import { navigationTheme } from './navigationTheme';
 
 // Import screens
 import { AlertDashboard } from '../screens/AlertDashboard';
-import { DashboardScreen } from '../screens/DashboardScreen';
+import DashboardScreen from '../screens/DashboardScreen';
 import { AlertsScreen } from '../screens/AlertsScreen';
 import { AlertDetailScreen } from '../screens/AlertDetailScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
@@ -29,8 +29,12 @@ const Stack = createStackNavigator<RootStackParamList>();
 function TabNavigator() {
   const { currentUser, isOperator } = useUser();
   
+  console.log('TabNavigator - currentUser:', currentUser);
+  console.log('TabNavigator - isOperator:', isOperator);
+  
   // Choose dashboard based on user role
   const DashboardComponent = isOperator ? OperatorDashboard : StoreManagerDashboard;
+  console.log('Selected Dashboard Component:', DashboardComponent.name);
   
   return (
     <Tab.Navigator
@@ -90,6 +94,8 @@ function TabNavigator() {
 export function AppNavigator() {
   const { currentUser } = useUser();
   
+  console.log('AppNavigator - currentUser:', currentUser);
+  
   return (
     <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator
@@ -123,8 +129,8 @@ export function AppNavigator() {
           <>
             <Stack.Screen
               name="Dashboard"
-              component={TabNavigator}
-          options={{ 
+              component={currentUser.role === 'OPERATOR' ? OperatorDashboard : StoreManagerDashboard}
+              options={{ 
             headerTitle: () => (
               <View style={{ flexDirection: 'row', alignItems: 'center' }}>
                 <Image 
@@ -140,9 +146,9 @@ export function AppNavigator() {
               </View>
             ),
             headerShown: true,
-          }}
-        />
-        <Stack.Screen
+            }}
+            />
+            <Stack.Screen
           name="AlertDetail"
           component={AlertDetailScreen}
           options={{ 
