@@ -10,7 +10,7 @@ export function AlertsScreen() {
         <EmptyState
           title="Alert History"
           message="View all alerts including resolved and dismissed items"
-          icon="📋"
+          iconName="history"
         />
       </View>
     </View>

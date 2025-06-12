@@ -3,6 +3,28 @@ export type AlertType = 'INVENTORY' | 'ORDER' | 'EQUIPMENT' | 'STAFF' | 'CUSTOME
 export type AlertPriority = 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
 export type AlertStatus = 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED' | 'DISMISSED';
 export type RestaurantType = 'FAST_CASUAL' | 'FINE_DINING' | 'CAFE' | 'BAR' | 'FOOD_TRUCK' | 'CATERING';
+export type UserRole = 'OPERATOR' | 'STORE_MANAGER' | 'REGIONAL_MANAGER' | 'ADMIN';
+
+// Assignment history tracking
+export interface AssignmentHistoryEntry {
+  assignedTo: string;
+  assignedToName: string;
+  assignedBy: string;
+  assignedByName: string;
+  assignedAt: Date;
+  reason?: string;
+  action: 'assigned' | 'reassigned' | 'unassigned';
+}
+
+// Cure step tracking
+export interface CureStep {
+  id: string;
+  description: string;
+  completed: boolean;
+  completedAt?: Date;
+  completedBy?: string;
+  notes?: string;
+}
 
 export interface Alert {
   id: string;
@@ -20,6 +42,7 @@ export interface Alert {
   acknowledgedAt?: Date;
   acknowledgedBy?: string;
   resolvedAt?: Date;
+  dismissedAt?: Date;
   readAt?: Date;
   shouldNotify: boolean;
   notificationSent: boolean;
@@ -29,6 +52,20 @@ export interface Alert {
   estimatedResolutionTime?: number; // minutes
   source: string;
   tags: string[];
+  explanation?: string;
+  relatedFactors?: string[];
+  helpfulVotes?: number;
+  notHelpfulVotes?: number;
+  dismissedUntilRefresh?: boolean;
+  // Assignment fields
+  assignedTo?: string;
+  assignedToName?: string;
+  assignedBy?: string;
+  assignedByName?: string;
+  assignedAt?: Date;
+  assignmentHistory?: AssignmentHistoryEntry[];
+  cureSteps?: CureStep[];
+  resolutionNotes?: string;
 }
 
 export interface RestaurantProfile {
@@ -89,20 +126,51 @@ export interface NotificationResponse {
 
 export type NotificationPermissionStatus = 'granted' | 'denied' | 'undetermined';
 
+export interface PendingNotification {
+  id: string;
+  title: string;
+  body: string;
+  data: {
+    alertId: string;
+    type: AlertType;
+    priority: AlertPriority;
+  };
+  scheduledTime: number;
+}
+
+export interface NotificationState {
+  permissions: NotificationPermissionStatus;
+  settings: NotificationSettings;
+  queue: PendingNotification[];
+  lastNotificationTime: number;
+  notificationHistory: string[];
+}
+
+export type NotificationAction =
+  | { type: 'SET_PERMISSIONS'; payload: NotificationPermissionStatus }
+  | { type: 'UPDATE_SETTINGS'; payload: Partial<NotificationSettings> }
+  | { type: 'ADD_TO_QUEUE'; payload: PendingNotification }
+  | { type: 'REMOVE_FROM_QUEUE'; payload: string }
+  | { type: 'CLEAR_QUEUE' }
+  | { type: 'ADD_TO_HISTORY'; payload: string };
+
 export interface NotificationSettings {
-  allowNotifications: boolean;
+  enabled: boolean;
   allowCritical: boolean;
   allowHigh: boolean;
   allowMedium: boolean;
   allowLow: boolean;
+  sound: boolean;
+  vibration: boolean;
+  badge: boolean;
   quietHours: {
     enabled: boolean;
     start: string; // HH:MM format
     end: string;   // HH:MM format
   };
   maxPerHour: number;
-  customSounds: boolean;
-  vibration: boolean;
+  minimumPriority: AlertPriority;
+  typeFilters: Record<AlertType, boolean>;
 }
 
 // User Preferences
@@ -162,14 +230,23 @@ export type AlertAction =
   | { type: 'SET_ALERTS'; payload: Alert[] }
   | { type: 'ADD_ALERT'; payload: Alert }
   | { type: 'UPDATE_ALERT'; payload: { id: string; updates: Partial<Alert> } }
+  | { type: 'REMOVE_ALERT'; payload: string }
   | { type: 'ACKNOWLEDGE_ALERT'; payload: { id: string; userId?: string } }
   | { type: 'RESOLVE_ALERT'; payload: string }
   | { type: 'DISMISS_ALERT'; payload: string }
+  | { type: 'DISMISS_UNTIL_REFRESH'; payload: string }
   | { type: 'MARK_READ'; payload: string }
+  | { type: 'MARK_HELPFUL'; payload: { id: string; helpful: boolean } }
   | { type: 'SET_LOADING'; payload: boolean }
   | { type: 'SET_ERROR'; payload: string | null }
+  | { type: 'SET_FILTERS'; payload: AlertFilters }
   | { type: 'UPDATE_FILTERS'; payload: Partial<AlertFilters> }
-  | { type: 'CLEAR_ALERTS' };
+  | { type: 'CLEAR_ALERTS' }
+  | { type: 'ASSIGN_ALERT'; payload: { alertId: string; assignedTo: string; assignedToName: string; assignedBy: string; assignedByName: string } }
+  | { type: 'REASSIGN_ALERT'; payload: { alertId: string; assignedTo: string; assignedToName: string; assignedBy: string; assignedByName: string; reason?: string } }
+  | { type: 'UNASSIGN_ALERT'; payload: { alertId: string; unassignedBy: string } }
+  | { type: 'UPDATE_CURE_STEP'; payload: { alertId: string; stepId: string; updates: Partial<CureStep> } }
+  | { type: 'ADD_RESOLUTION_NOTES'; payload: { alertId: string; notes: string } };
 
 // Service Response Types
 export interface ServiceResponse<T> {
@@ -210,7 +287,7 @@ export type RecoveryAction =
 // Notification Category Types
 export interface NotificationCategory {
   identifier: string;
-  actions: NotificationAction[];
+  actions: NotificationActionConfig[];
   options?: {
     customDismissAction?: boolean;
     allowInCarPlay?: boolean;
@@ -219,7 +296,7 @@ export interface NotificationCategory {
   };
 }
 
-export interface NotificationAction {
+export interface NotificationActionConfig {
   identifier: string;
   title: string;
   options?: {
@@ -235,6 +312,8 @@ export interface AlertItemProps {
   onPress: (alert: Alert) => void;
   onAcknowledge: (alertId: string) => void;
   onDismiss: (alertId: string) => void;
+  onMarkHelpful?: (alertId: string, helpful: boolean) => void;
+  onTellMeMore?: (alertId: string) => void;
 }
 
 export interface AlertDashboardProps {
@@ -284,8 +363,24 @@ export interface User {
   email: string;
   name: string;
   avatar?: string;
+  role: UserRole;
+  storeId?: string;
+  storeName?: string;
+  permissions?: string[];
+  teamMembers?: TeamMember[];
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface TeamMember {
+  id: string;
+  name: string;
+  email: string;
+  role: UserRole;
+  storeId: string;
+  avatar?: string;
+  status: 'ACTIVE' | 'INACTIVE' | 'ON_BREAK';
+  lastActive?: Date;
 }
 
 // Component Props types
@@ -326,13 +421,16 @@ export interface AlertFilters {
   type?: AlertType;
   status?: AlertStatus;
   dateRange?: {
-    start: Date;
-    end: Date;
+    start: number;
+    end: number;
   };
   search: string;
   tags?: string[];
   showRead: boolean;
   showResolved: boolean;
+  assignedToMe?: boolean;
+  unassigned?: boolean;
+  assignedTo?: string;
 }
 
 export interface AlertState {

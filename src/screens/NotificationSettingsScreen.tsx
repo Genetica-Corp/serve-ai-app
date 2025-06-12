@@ -8,7 +8,7 @@ export function NotificationSettingsScreen() {
       <EmptyState
         title="Notification Settings"
         message="Detailed notification preferences will be implemented here"
-        icon="🔔"
+        iconName="notifications"
       />
     </View>
   );

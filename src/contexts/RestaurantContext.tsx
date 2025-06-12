@@ -6,7 +6,7 @@ import {
   RestaurantContext as RestaurantContextType,
   RestaurantType,
   Alert
-} from '../../types';
+} from '../types';
 
 // Initial state
 const initialState: RestaurantState = {
@@ -306,14 +306,39 @@ export function RestaurantProvider({ children }: RestaurantProviderProps) {
 
   // Mock data methods for demo
   const generateMockAlerts = async (count: number): Promise<void> => {
-    // This would normally interface with the AlertContext
-    // For now, we'll just resolve
+    // Generate mock alerts using SampleAlertService
+    // Note: This requires the AlertContext to be accessible, which would typically
+    // be done through a ref or callback pattern to avoid circular dependencies
+    
+    // For now, we'll store a reference that can be set by the parent app
+    if ((window as any).__alertContext) {
+      const { SampleAlertService } = await import('../services/SampleAlertService');
+      const sampleAlerts = SampleAlertService.generateSampleAlerts();
+      
+      // Take the requested number of alerts
+      const alertsToAdd = sampleAlerts.slice(0, Math.min(count, sampleAlerts.length));
+      
+      // Add each alert to the AlertContext
+      alertsToAdd.forEach(alert => {
+        (window as any).__alertContext.addAlert(alert);
+      });
+    }
+    
     return Promise.resolve();
   };
 
   const loadDemoScenario = async (scenario: string): Promise<void> => {
-    // This would normally interface with the MockDataGenerator
-    // For now, we'll just resolve
+    // Load a specific demo scenario with pre-configured alerts
+    if ((window as any).__alertContext) {
+      const { SampleAlertService } = await import('../services/SampleAlertService');
+      const allAlerts = SampleAlertService.generateSampleAlerts();
+      
+      // Add all sample alerts for demo
+      allAlerts.forEach(alert => {
+        (window as any).__alertContext.addAlert(alert);
+      });
+    }
+    
     return Promise.resolve();
   };
 
@@ -439,4 +464,4 @@ export function useRestaurant(): RestaurantContextInterface {
   return context;
 }
 
-export default RestaurantContext;
+export { RestaurantContext };

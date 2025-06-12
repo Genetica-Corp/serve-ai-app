@@ -5,6 +5,8 @@ export { PermissionManager } from './PermissionManager';
 export { NotificationScheduler } from './NotificationScheduler';
 export { MockNotificationService } from './MockNotificationService';
 export { ErrorHandler } from './ErrorHandler';
+export { AlertSearchService } from './AlertSearchService';
+export { SampleAlertService } from './SampleAlertService';
 
 // Service initialization and coordination
 import { NotificationService } from './NotificationService';

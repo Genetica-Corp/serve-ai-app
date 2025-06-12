@@ -5,6 +5,7 @@ import {
   TouchableOpacity,
   StyleSheet,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 
 export interface EmptyStateProps {
   title: string;
@@ -12,6 +13,7 @@ export interface EmptyStateProps {
   actionText?: string;
   onAction?: () => void;
   icon?: string;
+  iconName?: string;
 }
 
 export function EmptyState({ 
@@ -19,13 +21,16 @@ export function EmptyState({
   message, 
   actionText, 
   onAction,
-  icon 
+  icon,
+  iconName 
 }: EmptyStateProps) {
   return (
     <View style={styles.container}>
-      {icon && (
+      {iconName ? (
+        <Icon name={iconName} size={48} color="#9CA3AF" style={styles.iconContainer} />
+      ) : icon ? (
         <Text style={styles.icon}>{icon}</Text>
-      )}
+      ) : null}
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
       {actionText && onAction && (
@@ -48,6 +53,9 @@ const styles = StyleSheet.create({
     fontSize: 48,
     marginBottom: 16,
   },
+  iconContainer: {
+    marginBottom: 16,
+  },
   title: {
     fontSize: 20,
     fontWeight: '600',
@@ -63,7 +71,7 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   button: {
-    backgroundColor: '#3B82F6',
+    backgroundColor: '#14B8A6',
     paddingHorizontal: 24,
     paddingVertical: 12,
     borderRadius: 8,
