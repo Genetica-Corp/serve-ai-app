@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { LoadingSpinner } from '@/components';
+import LoadingSpinner from '../components/LoadingSpinner';
 
 const DashboardScreen: React.FC = () => {
   return (

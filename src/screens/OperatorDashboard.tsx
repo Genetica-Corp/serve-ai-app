@@ -1,43 +1,57 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   RefreshControl,
   Modal,
   FlatList,
   Alert as RNAlert,
+  SafeAreaView,
+  ListRenderItem,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList, Alert, TeamMember } from '../types';
 import { useAlerts } from '../contexts/AlertContext';
 import { useUser } from '../contexts/UserContext';
-import AlertCard from '../components/AlertCard';
-import LoadingSpinner from '../components/LoadingSpinner';
-import EmptyState from '../components/EmptyState';
+import { LoadingSpinner } from '../components/LoadingSpinner';
+import { EmptyState } from '../components/EmptyState';
+import {
+  DashboardHeader,
+  MetricsSection,
+  FilterSection,
+  AlertListItem,
+} from '../components/dashboard';
 import UserService from '../services/UserService';
 import AssignmentService from '../services/AssignmentService';
 import { Theme, withOpacity } from '../theme';
-import { Button } from '../components/ui/Button';
-import { Card } from '../components/ui/Card';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'Dashboard'>;
 
 const OperatorDashboard: React.FC = () => {
+  console.log('OperatorDashboard rendering...');
   const navigation = useNavigation<NavigationProp>();
-  const { state: alertState, getFilteredAlerts, assignAlert, updateFilters } = useAlerts();
+  const {
+    state: alertState,
+    getFilteredAlerts,
+    assignAlert,
+    updateFilters,
+  } = useAlerts();
   const { currentUser, teamMembers, setTeamMembers } = useUser();
-  
+
+  console.log('OperatorDashboard - currentUser:', currentUser);
+  console.log('OperatorDashboard - alerts:', alertState.alerts.length);
+
   const [refreshing, setRefreshing] = useState(false);
   const [selectedAlert, setSelectedAlert] = useState<Alert | null>(null);
   const [assignModalVisible, setAssignModalVisible] = useState(false);
-  const [activeFilter, setActiveFilter] = useState<'all' | 'unassigned' | 'assigned'>('all');
-  
+  const [activeFilter, setActiveFilter] = useState<
+    'all' | 'unassigned' | 'assigned'
+  >('all');
+
   useEffect(() => {
     loadTeamMembers();
   }, []);
@@ -54,7 +68,7 @@ const OperatorDashboard: React.FC = () => {
       default:
         updateFilters({ unassigned: false, assignedToMe: false });
     }
-  }, [activeFilter]);
+  }, [activeFilter, updateFilters]);
 
   const loadTeamMembers = async () => {
     if (currentUser) {
@@ -63,17 +77,17 @@ const OperatorDashboard: React.FC = () => {
     }
   };
 
-  const handleRefresh = async () => {
+  const handleRefresh = useCallback(async () => {
     setRefreshing(true);
     await loadTeamMembers();
     // In a real app, would also refresh alerts
     setRefreshing(false);
-  };
+  }, []);
 
-  const handleAssignAlert = (alert: Alert) => {
+  const handleAssignAlert = useCallback((alert: Alert) => {
     setSelectedAlert(alert);
     setAssignModalVisible(true);
-  };
+  }, []);
 
   const handleAssignToMember = async (member: TeamMember) => {
     if (!selectedAlert || !currentUser) return;
@@ -92,11 +106,11 @@ const OperatorDashboard: React.FC = () => {
         currentUser.id,
         currentUser.name
       );
-      
+
       // Generate cure steps for the alert
       const cureSteps = AssignmentService.generateCureSteps(selectedAlert.type);
       // In a real app, would update the alert with cure steps
-      
+
       RNAlert.alert(
         'Alert Assigned',
         `Alert assigned to ${member.name} successfully!`,
@@ -110,6 +124,13 @@ const OperatorDashboard: React.FC = () => {
     setSelectedAlert(null);
   };
 
+  const handleFilterChange = useCallback(
+    (filter: 'all' | 'unassigned' | 'assigned') => {
+      setActiveFilter(filter);
+    },
+    []
+  );
+
   const filteredAlerts = getFilteredAlerts();
   const metrics = {
     total: filteredAlerts.length,
@@ -117,6 +138,23 @@ const OperatorDashboard: React.FC = () => {
     assigned: filteredAlerts.filter(a => a.assignedTo).length,
     critical: filteredAlerts.filter(a => a.priority === 'CRITICAL').length,
   };
+
+  const renderAlert: ListRenderItem<Alert> = useCallback(
+    ({ item }) => (
+      <AlertListItem
+        alert={item}
+        onPress={() => navigation.navigate('AlertDetail', { alertId: item.id })}
+        onAcknowledge={alertId => {
+          console.log('Acknowledge alert:', alertId);
+        }}
+        onDismiss={alertId => {
+          console.log('Dismiss alert:', alertId);
+        }}
+        onAssign={handleAssignAlert}
+      />
+    ),
+    [navigation, handleAssignAlert]
+  );
 
   const renderTeamMember = ({ item }: { item: TeamMember }) => (
     <TouchableOpacity
@@ -126,113 +164,112 @@ const OperatorDashboard: React.FC = () => {
       <View style={styles.memberInfo}>
         <Text style={styles.memberName}>{item.name}</Text>
         <Text style={styles.memberRole}>{item.role.replace('_', ' ')}</Text>
-        <Text style={[styles.memberStatus, { color: item.status === 'ACTIVE' ? Theme.colors.success : Theme.colors.warning }]}>
+        <Text
+          style={[
+            styles.memberStatus,
+            {
+              color:
+                item.status === 'ACTIVE'
+                  ? Theme.colors.success
+                  : Theme.colors.warning,
+            },
+          ]}
+        >
           {item.status}
         </Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color={Theme.colors.neutral[400]} />
+      <Ionicons
+        name='chevron-forward'
+        size={20}
+        color={Theme.colors.neutral[400]}
+      />
     </TouchableOpacity>
   );
 
+  const renderListHeader = useCallback(
+    () => (
+      <>
+        <DashboardHeader userName={currentUser?.name || 'User'} />
+        <MetricsSection metrics={metrics} />
+        <FilterSection
+          activeFilter={activeFilter}
+          onFilterChange={handleFilterChange}
+        />
+      </>
+    ),
+    [currentUser?.name, metrics, activeFilter, handleFilterChange]
+  );
+
+  const renderEmptyComponent = useCallback(
+    () => (
+      <View style={styles.emptyContainer}>
+        <EmptyState
+          title='No alerts found'
+          message={`No ${
+            activeFilter === 'all' ? '' : activeFilter
+          } alerts to display`}
+          iconName='notifications-off'
+        />
+      </View>
+    ),
+    [activeFilter]
+  );
+
+  const keyExtractor = useCallback((item: Alert) => item.id, []);
+
+  if (!currentUser) {
+    console.log('OperatorDashboard - No current user, showing loading...');
+    return (
+      <SafeAreaView style={styles.container}>
+        <LoadingSpinner text='Loading user data...' />
+      </SafeAreaView>
+    );
+  }
+
+  if (alertState.loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        {renderListHeader()}
+        <View style={styles.loadingContainer}>
+          <LoadingSpinner />
+        </View>
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Operator Dashboard</Text>
-        <Text style={styles.subtitle}>Welcome, {currentUser?.name}</Text>
-      </View>
-
-      <View style={styles.metricsContainer}>
-        <View style={styles.metricCard}>
-          <Text style={styles.metricValue}>{metrics.total}</Text>
-          <Text style={styles.metricLabel}>Total Alerts</Text>
-        </View>
-        <View style={styles.metricCard}>
-          <Text style={[styles.metricValue, { color: Theme.colors.error }]}>{metrics.unassigned}</Text>
-          <Text style={styles.metricLabel}>Unassigned</Text>
-        </View>
-        <View style={styles.metricCard}>
-          <Text style={[styles.metricValue, { color: Theme.colors.success }]}>{metrics.assigned}</Text>
-          <Text style={styles.metricLabel}>Assigned</Text>
-        </View>
-        <View style={styles.metricCard}>
-          <Text style={[styles.metricValue, { color: '#F44336' }]}>{metrics.critical}</Text>
-          <Text style={styles.metricLabel}>Critical</Text>
-        </View>
-      </View>
-
-      <View style={styles.filterContainer}>
-        <TouchableOpacity
-          style={[styles.filterButton, activeFilter === 'all' && styles.filterButtonActive]}
-          onPress={() => setActiveFilter('all')}
-        >
-          <Text style={[styles.filterText, activeFilter === 'all' && styles.filterTextActive]}>
-            All Alerts
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.filterButton, activeFilter === 'unassigned' && styles.filterButtonActive]}
-          onPress={() => setActiveFilter('unassigned')}
-        >
-          <Text style={[styles.filterText, activeFilter === 'unassigned' && styles.filterTextActive]}>
-            Unassigned
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.filterButton, activeFilter === 'assigned' && styles.filterButtonActive]}
-          onPress={() => setActiveFilter('assigned')}
-        >
-          <Text style={[styles.filterText, activeFilter === 'assigned' && styles.filterTextActive]}>
-            Assigned
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <ScrollView
-        style={styles.alertsList}
+      <FlatList
+        style={styles.flatList}
+        contentContainerStyle={styles.contentContainer}
+        data={filteredAlerts}
+        renderItem={renderAlert}
+        keyExtractor={keyExtractor}
+        ListHeaderComponent={renderListHeader}
+        ListEmptyComponent={renderEmptyComponent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
-        }
-      >
-        {alertState.loading ? (
-          <LoadingSpinner />
-        ) : filteredAlerts.length === 0 ? (
-          <EmptyState
-            title="No alerts found"
-            message={`No ${activeFilter === 'all' ? '' : activeFilter} alerts to display`}
-            icon="notifications-off-outline"
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={handleRefresh}
+            colors={[Theme.colors.primary.DEFAULT]}
+            tintColor={Theme.colors.primary.DEFAULT}
           />
-        ) : (
-          filteredAlerts.map(alert => (
-            <View key={alert.id} style={styles.alertWrapper}>
-              <AlertCard
-                alert={alert}
-                onPress={() => navigation.navigate('AlertDetail', { alertId: alert.id })}
-              />
-              {!alert.assignedTo && (
-                <TouchableOpacity
-                  style={styles.assignButton}
-                  onPress={() => handleAssignAlert(alert)}
-                >
-                  <Ionicons name="person-add" size={16} color={Theme.colors.white} />
-                  <Text style={styles.assignButtonText}>Assign</Text>
-                </TouchableOpacity>
-              )}
-              {alert.assignedTo && (
-                <View style={styles.assignedInfo}>
-                  <Ionicons name="person" size={14} color={Theme.colors.neutral[500]} />
-                  <Text style={styles.assignedText}>
-                    Assigned to {alert.assignedToName}
-                  </Text>
-                </View>
-              )}
-            </View>
-          ))
-        )}
-      </ScrollView>
+        }
+        showsVerticalScrollIndicator={false}
+        removeClippedSubviews={true}
+        maxToRenderPerBatch={10}
+        windowSize={10}
+        initialNumToRender={10}
+        getItemLayout={(data, index) => ({
+          length: 120, // Approximate height of AlertListItem
+          offset: 120 * index,
+          index,
+        })}
+      />
 
       <Modal
         visible={assignModalVisible}
-        animationType="slide"
+        animationType='slide'
         transparent={true}
         onRequestClose={() => setAssignModalVisible(false)}
       >
@@ -244,10 +281,14 @@ const OperatorDashboard: React.FC = () => {
                 onPress={() => setAssignModalVisible(false)}
                 style={styles.closeButton}
               >
-                <Ionicons name="close" size={24} color={Theme.colors.neutral[900]} />
+                <Ionicons
+                  name='close'
+                  size={24}
+                  color={Theme.colors.neutral[900]}
+                />
               </TouchableOpacity>
             </View>
-            
+
             <Text style={styles.modalSubtitle}>
               Select a team member to assign this alert
             </Text>
@@ -275,109 +316,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: Theme.colors.neutral[50],
   },
-  header: {
-    backgroundColor: Theme.colors.primary.DEFAULT,
-    padding: Theme.spacing.lg,
-    paddingTop: Theme.spacing.sm,
-  },
-  title: {
-    fontSize: Theme.typography.fontSize['2xl'],
-    fontFamily: Theme.typography.fontFamily.bold,
-    color: Theme.colors.white,
-  },
-  subtitle: {
-    fontSize: Theme.typography.fontSize.base,
-    fontFamily: Theme.typography.fontFamily.regular,
-    color: withOpacity(Theme.colors.white, 0.9),
-    marginTop: Theme.spacing.xs,
-  },
-  metricsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: Theme.spacing.lg,
-    backgroundColor: Theme.colors.white,
-    ...Theme.shadows.md,
-  },
-  metricCard: {
-    alignItems: 'center',
-  },
-  metricValue: {
-    fontSize: Theme.typography.fontSize['3xl'],
-    fontFamily: Theme.typography.fontFamily.bold,
-    color: Theme.colors.neutral[900],
-  },
-  metricLabel: {
-    fontSize: Theme.typography.fontSize.xs,
-    fontFamily: Theme.typography.fontFamily.regular,
-    color: Theme.colors.neutral[600],
-    marginTop: Theme.spacing.xs,
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    padding: Theme.spacing.md,
-    backgroundColor: Theme.colors.white,
-    marginTop: 1,
-    ...Theme.shadows.sm,
-  },
-  filterButton: {
+  flatList: {
     flex: 1,
-    paddingVertical: Theme.spacing.sm,
-    paddingHorizontal: Theme.spacing.md,
-    marginHorizontal: Theme.spacing.xs,
-    borderRadius: Theme.borderRadius.full,
-    borderWidth: 1,
-    borderColor: Theme.colors.neutral[200],
-    alignItems: 'center',
   },
-  filterButtonActive: {
-    backgroundColor: Theme.colors.primary.DEFAULT,
-    borderColor: Theme.colors.primary.DEFAULT,
+  contentContainer: {
+    flexGrow: 1,
+    paddingBottom: Theme.spacing.xl,
   },
-  filterText: {
-    fontSize: Theme.typography.fontSize.sm,
-    fontFamily: Theme.typography.fontFamily.medium,
-    color: Theme.colors.neutral[600],
-  },
-  filterTextActive: {
-    color: Theme.colors.white,
-    fontFamily: Theme.typography.fontFamily.semibold,
-  },
-  alertsList: {
+  emptyContainer: {
     flex: 1,
-    padding: Theme.spacing.md,
-  },
-  alertWrapper: {
-    marginBottom: Theme.spacing.sm,
-  },
-  assignButton: {
-    position: 'absolute',
-    top: Theme.spacing.sm,
-    right: Theme.spacing.sm,
-    backgroundColor: Theme.colors.secondary.DEFAULT,
-    paddingHorizontal: Theme.spacing.sm,
-    paddingVertical: Theme.spacing.xs,
-    borderRadius: Theme.borderRadius.full,
-    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
-    ...Theme.shadows.sm,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingTop: Theme.spacing.xl,
   },
-  assignButtonText: {
-    color: Theme.colors.white,
-    fontSize: Theme.typography.fontSize.xs,
-    fontFamily: Theme.typography.fontFamily.semibold,
-    marginLeft: Theme.spacing.xs,
-  },
-  assignedInfo: {
-    flexDirection: 'row',
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Theme.spacing.md,
-    paddingTop: Theme.spacing.sm,
-  },
-  assignedText: {
-    fontSize: Theme.typography.fontSize.xs,
-    fontFamily: Theme.typography.fontFamily.regular,
-    color: Theme.colors.neutral[600],
-    marginLeft: Theme.spacing.xs,
   },
   modalOverlay: {
     flex: 1,

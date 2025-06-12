@@ -59,10 +59,28 @@ export const Colors = {
 
 export const Typography = {
   fontFamily: {
-    regular: 'Inter-Regular',
-    medium: 'Inter-Medium',
-    semibold: 'Inter-SemiBold',
-    bold: 'Inter-Bold',
+    // Primary font family (Roboto for body text)
+    regular: 'Roboto_400Regular',
+    medium: 'Roboto_500Medium',
+    semibold: 'OpenSans_600SemiBold',
+    bold: 'Lato_700Bold',
+    
+    // Extended font options
+    roboto: {
+      regular: 'Roboto_400Regular',
+      medium: 'Roboto_500Medium',
+      bold: 'Roboto_700Bold',
+    },
+    openSans: {
+      regular: 'OpenSans_400Regular',
+      semibold: 'OpenSans_600SemiBold',
+      bold: 'OpenSans_700Bold',
+    },
+    lato: {
+      regular: 'Lato_400Regular',
+      bold: 'Lato_700Bold',
+      black: 'Lato_900Black',
+    },
   },
   
   fontSize: {

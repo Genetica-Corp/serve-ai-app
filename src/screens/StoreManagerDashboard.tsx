@@ -9,8 +9,8 @@ import {
   Modal,
   TextInput,
   Alert as RNAlert,
+  SafeAreaView,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { Ionicons } from '@expo/vector-icons';
@@ -110,7 +110,8 @@ const StoreManagerDashboard: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+      <View style={styles.innerContainer}>
+        <View style={styles.header}>
         <Text style={styles.title}>Store Manager Dashboard</Text>
         <Text style={styles.subtitle}>Welcome, {currentUser?.name}</Text>
       </View>
@@ -157,6 +158,7 @@ const StoreManagerDashboard: React.FC = () => {
 
       <ScrollView
         style={styles.alertsList}
+        contentContainerStyle={styles.alertsListContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />
         }
@@ -197,6 +199,7 @@ const StoreManagerDashboard: React.FC = () => {
           ))
         )}
       </ScrollView>
+      </View>
 
       <Modal
         visible={cureModalVisible}
@@ -280,6 +283,9 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#F5F5F5',
   },
+  innerContainer: {
+    flex: 1,
+  },
   header: {
     backgroundColor: '#388E3C',
     padding: 20,
@@ -349,7 +355,10 @@ const styles = StyleSheet.create({
   },
   alertsList: {
     flex: 1,
+  },
+  alertsListContent: {
     padding: 16,
+    paddingBottom: 24,
   },
   alertWrapper: {
     marginBottom: 12,
