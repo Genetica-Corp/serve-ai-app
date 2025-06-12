@@ -17,6 +17,7 @@ import { NotificationSettingsScreen } from '../screens/NotificationSettingsScree
 import RoleSelectionScreen from '../screens/RoleSelectionScreen';
 import OperatorDashboard from '../screens/OperatorDashboard';
 import StoreManagerDashboard from '../screens/StoreManagerDashboard';
+import { IntegrationsScreen } from '../screens/IntegrationsScreen';
 
 // Types
 import { RootStackParamList, TabParamList } from '../types';
@@ -154,6 +155,14 @@ export function AppNavigator() {
               component={NotificationSettingsScreen}
               options={{ 
                 title: 'Notification Settings',
+                headerBackTitleVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="Integrations"
+              component={IntegrationsScreen}
+              options={{ 
+                title: 'Integrations',
                 headerBackTitleVisible: false,
               }}
             />
