@@ -1,8 +1,11 @@
 import React from 'react';
-import { Text } from 'react-native';
+import { Text, Image, View } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
+import { Theme } from '../theme';
+import { navigationTheme } from './navigationTheme';
 
 // Import screens
 import { AlertDashboard } from '../screens/AlertDashboard';
@@ -11,29 +14,52 @@ import { AlertsScreen } from '../screens/AlertsScreen';
 import { AlertDetailScreen } from '../screens/AlertDetailScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
 import { NotificationSettingsScreen } from '../screens/NotificationSettingsScreen';
+import RoleSelectionScreen from '../screens/RoleSelectionScreen';
+import OperatorDashboard from '../screens/OperatorDashboard';
+import StoreManagerDashboard from '../screens/StoreManagerDashboard';
+import { IntegrationsScreen } from '../screens/IntegrationsScreen';
 
 // Types
 import { RootStackParamList, TabParamList } from '../types';
+import { useUser } from '../contexts/UserContext';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 const Stack = createStackNavigator<RootStackParamList>();
 
 function TabNavigator() {
+  const { currentUser, isOperator } = useUser();
+  
+  // Choose dashboard based on user role
+  const DashboardComponent = isOperator ? OperatorDashboard : StoreManagerDashboard;
+  
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#3B82F6',
-        tabBarInactiveTintColor: '#6B7280',
+        tabBarActiveTintColor: Theme.colors.primary.DEFAULT,
+        tabBarInactiveTintColor: Theme.colors.neutral[500],
+        tabBarStyle: {
+          backgroundColor: Theme.colors.white,
+          borderTopColor: Theme.colors.neutral[200],
+          borderTopWidth: 1,
+          paddingTop: Theme.spacing.sm,
+          paddingBottom: Theme.spacing.sm,
+          height: 80,
+          ...Theme.shadows.sm,
+        },
+        tabBarLabelStyle: {
+          fontSize: Theme.typography.fontSize.xs,
+          fontFamily: Theme.typography.fontFamily.medium,
+        },
       }}
     >
       <Tab.Screen
         name="Dashboard"
-        component={AlertDashboard}
+        component={DashboardComponent}
         options={{
           tabBarLabel: 'Dashboard',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 20, color }}>📊</Text>
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="dashboard" size={size || 24} color={color} />
           ),
         }}
       />
@@ -42,8 +68,8 @@ function TabNavigator() {
         component={AlertsScreen}
         options={{
           tabBarLabel: 'Alerts',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 20, color }}>🚨</Text>
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="notifications" size={size || 24} color={color} />
           ),
         }}
       />
@@ -52,8 +78,8 @@ function TabNavigator() {
         component={SettingsScreen}
         options={{
           tabBarLabel: 'Settings',
-          tabBarIcon: ({ color }) => (
-            <Text style={{ fontSize: 20, color }}>⚙️</Text>
+          tabBarIcon: ({ color, size }) => (
+            <Icon name="settings" size={size || 24} color={color} />
           ),
         }}
       />
@@ -62,24 +88,57 @@ function TabNavigator() {
 }
 
 export function AppNavigator() {
+  const { currentUser } = useUser();
+  
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#3B82F6',
+            backgroundColor: Theme.colors.white,
+            borderBottomColor: Theme.colors.neutral[200],
+            borderBottomWidth: 1,
+            elevation: 0,
+            shadowOpacity: 0,
+            height: 60,
           },
-          headerTintColor: '#FFFFFF',
+          headerTintColor: Theme.colors.neutral[900],
           headerTitleStyle: {
-            fontWeight: '600',
+            fontFamily: Theme.typography.fontFamily.semibold,
+            fontSize: Theme.typography.fontSize.lg,
+          },
+          headerBackTitleStyle: {
+            fontFamily: Theme.typography.fontFamily.regular,
+            fontSize: Theme.typography.fontSize.sm,
           },
         }}
       >
-        <Stack.Screen
-          name="Dashboard"
-          component={TabNavigator}
+        {!currentUser ? (
+          <Stack.Screen
+            name="Home"
+            component={RoleSelectionScreen}
+            options={{ headerShown: false }}
+          />
+        ) : (
+          <>
+            <Stack.Screen
+              name="Dashboard"
+              component={TabNavigator}
           options={{ 
-            title: 'Serve AI Restaurant Alerts',
+            headerTitle: () => (
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <Image 
+                  source={require('../../assets/serve-ai-logo.png')}
+                  style={{ width: 32, height: 32, marginRight: 12 }}
+                  resizeMode="contain"
+                />
+                <Text style={{ 
+                  fontSize: Theme.typography.fontSize.lg, 
+                  fontFamily: Theme.typography.fontFamily.semibold, 
+                  color: Theme.colors.neutral[900] 
+                }}>Serve AI</Text>
+              </View>
+            ),
             headerShown: true,
           }}
         />
@@ -91,14 +150,24 @@ export function AppNavigator() {
             headerBackTitleVisible: false,
           }}
         />
-        <Stack.Screen
-          name="NotificationSettings"
-          component={NotificationSettingsScreen}
-          options={{ 
-            title: 'Notification Settings',
-            headerBackTitleVisible: false,
-          }}
-        />
+            <Stack.Screen
+              name="NotificationSettings"
+              component={NotificationSettingsScreen}
+              options={{ 
+                title: 'Notification Settings',
+                headerBackTitleVisible: false,
+              }}
+            />
+            <Stack.Screen
+              name="Integrations"
+              component={IntegrationsScreen}
+              options={{ 
+                title: 'Integrations',
+                headerBackTitleVisible: false,
+              }}
+            />
+          </>
+        )}
       </Stack.Navigator>
     </NavigationContainer>
   );

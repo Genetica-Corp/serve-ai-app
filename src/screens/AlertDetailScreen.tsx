@@ -8,7 +8,7 @@ export function AlertDetailScreen() {
       <EmptyState
         title="Alert Details"
         message="Detailed alert view will be implemented here"
-        icon="📋"
+        iconName="description"
       />
     </View>
   );

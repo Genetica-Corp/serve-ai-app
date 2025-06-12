@@ -5,6 +5,7 @@ import {
   Text,
   StyleSheet,
 } from 'react-native';
+import { Theme } from '../theme';
 
 export interface LoadingSpinnerProps {
   size?: 'small' | 'large';
@@ -14,7 +15,7 @@ export interface LoadingSpinnerProps {
 
 export function LoadingSpinner({ 
   size = 'large', 
-  color = '#3B82F6', 
+  color = Theme.colors.primary.DEFAULT, 
   text = 'Loading...' 
 }: LoadingSpinnerProps) {
   return (
@@ -30,12 +31,13 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 20,
+    padding: Theme.spacing.lg,
   },
   text: {
-    marginTop: 16,
-    fontSize: 16,
-    color: '#6B7280',
+    marginTop: Theme.spacing.md,
+    fontSize: Theme.typography.fontSize.base,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[500],
     textAlign: 'center',
   },
 });

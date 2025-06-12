@@ -1,14 +1,14 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import * as Notifications from 'expo-notifications';
 import { 
-  NotificationState, 
-  NotificationAction, 
+  NotificationState,
+  NotificationAction,
   NotificationSettings, 
   NotificationPermissionStatus,
   PendingNotification,
   AlertType,
   AlertPriority
-} from '../../types';
+} from '../types';
 
 // Initial notification settings
 const defaultNotificationSettings: NotificationSettings = {

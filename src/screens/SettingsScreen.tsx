@@ -1,7 +1,14 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RootStackParamList } from '../types';
+import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
+
+type SettingsScreenNavigationProp = StackNavigationProp<RootStackParamList, 'Settings'>;
 
 export function SettingsScreen() {
+  const navigation = useNavigation<SettingsScreenNavigationProp>();
   return (
     <ScrollView style={styles.container}>
       <View style={styles.section}>
@@ -13,6 +20,20 @@ export function SettingsScreen() {
         <TouchableOpacity style={styles.settingItem}>
           <Text style={styles.settingLabel}>Restaurant Type</Text>
           <Text style={styles.settingValue}>Fast Casual</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Integrations</Text>
+        <TouchableOpacity 
+          style={styles.settingItem}
+          onPress={() => navigation.navigate('Integrations')}
+        >
+          <View style={styles.settingItemContent}>
+            <MaterialIcons name="extension" size={24} color="#6B7280" style={styles.settingIcon} />
+            <Text style={styles.settingLabel}>Manage Integrations</Text>
+          </View>
+          <MaterialIcons name="chevron-right" size={24} color="#6B7280" />
         </TouchableOpacity>
       </View>
 
@@ -81,5 +102,13 @@ const styles = StyleSheet.create({
   settingValue: {
     fontSize: 16,
     color: '#6B7280',
+  },
+  settingItemContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  settingIcon: {
+    marginRight: 12,
   },
 });

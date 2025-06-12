@@ -13,8 +13,27 @@ import { RestaurantContext } from '../contexts/RestaurantContext';
 import { Alert, AlertPriority, AlertType } from '../types';
 
 export function AlertDashboard() {
-  const { state: alertState, dispatch: alertDispatch } = useContext(AlertContext);
-  const { generateMockAlerts, loadDemoScenario } = useContext(RestaurantContext);
+  const alertContext = useContext(AlertContext);
+  const restaurantContext = useContext(RestaurantContext);
+
+  if (!alertContext) {
+    return (
+      <View style={styles.container}>
+        <Text>AlertContext not found</Text>
+      </View>
+    );
+  }
+
+  if (!restaurantContext) {
+    return (
+      <View style={styles.container}>
+        <Text>RestaurantContext not found</Text>
+      </View>
+    );
+  }
+
+  const { state: alertState, dispatch: alertDispatch } = alertContext;
+  const { generateMockAlerts, loadDemoScenario } = restaurantContext;
 
   const { alerts, activeAlerts, loading, error, filters } = alertState;
 
@@ -200,7 +219,7 @@ export function AlertDashboard() {
         message={error}
         actionText="Retry"
         onAction={loadInitialData}
-        icon="⚠️"
+        iconName="error-outline"
       />
     );
   }
@@ -235,7 +254,7 @@ export function AlertDashboard() {
             message="All clear! No alerts require your attention right now."
             actionText="Generate Demo Alerts"
             onAction={handleRefresh}
-            icon="✅"
+            iconName="check-circle-outline"
           />
         }
         contentContainerStyle={

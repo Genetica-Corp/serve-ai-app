@@ -1,32 +1,52 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   TouchableOpacity,
   StyleSheet,
+  Animated,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import { Alert, AlertPriority } from '../types';
+import { Theme, withOpacity } from '../theme';
+import { Card } from './ui/Card';
+import { Button } from './ui/Button';
 
 export interface AlertCardProps {
   alert: Alert;
   onPress: (alert: Alert) => void;
   onAcknowledge: (alertId: string) => void;
   onDismiss: (alertId: string) => void;
+  onMarkHelpful?: (alertId: string, helpful: boolean) => void;
+  onTellMeMore?: (alertId: string) => void;
 }
 
-export function AlertCard({ alert, onPress, onAcknowledge, onDismiss }: AlertCardProps) {
+export function AlertCard({ alert, onPress, onAcknowledge, onDismiss, onMarkHelpful, onTellMeMore }: AlertCardProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [animatedHeight] = useState(new Animated.Value(0));
+  
+  const toggleExpanded = () => {
+    const toValue = isExpanded ? 0 : 1;
+    setIsExpanded(!isExpanded);
+    
+    Animated.timing(animatedHeight, {
+      toValue,
+      duration: 200,
+      useNativeDriver: false,
+    }).start();
+  };
   const getPriorityColor = (priority: AlertPriority): string => {
     switch (priority) {
       case 'CRITICAL':
-        return '#DC2626'; // Red
+        return Theme.colors.primary.DEFAULT;
       case 'HIGH':
-        return '#F59E0B'; // Orange
+        return Theme.colors.error;
       case 'MEDIUM':
-        return '#3B82F6'; // Blue
+        return Theme.colors.secondary.DEFAULT;
       case 'LOW':
-        return '#10B981'; // Green
+        return Theme.colors.neutral[400];
       default:
-        return '#6B7280'; // Gray
+        return Theme.colors.neutral[300];
     }
   };
 
@@ -46,13 +66,14 @@ export function AlertCard({ alert, onPress, onAcknowledge, onDismiss }: AlertCar
   };
 
   return (
-    <TouchableOpacity
+    <Card
       testID="alert-card"
       style={[
         styles.container,
         { borderLeftColor: getPriorityColor(alert.priority) }
       ]}
       onPress={() => onPress(alert)}
+      elevated={!alert.read}
     >
       <View style={styles.header}>
         <View style={styles.titleRow}>
@@ -77,6 +98,95 @@ export function AlertCard({ alert, onPress, onAcknowledge, onDismiss }: AlertCar
       </View>
 
       <Text style={styles.message}>{alert.message}</Text>
+      
+      {/* Expand/Collapse Button */}
+      {(alert.explanation || alert.relatedFactors) && (
+        <TouchableOpacity 
+          style={styles.expandButton}
+          onPress={toggleExpanded}
+          testID="expand-button"
+        >
+          <Text style={styles.expandButtonText}>
+            {isExpanded ? 'Show Less' : 'Show More'}
+          </Text>
+          <Icon 
+            name={isExpanded ? 'expand-less' : 'expand-more'} 
+            size={20} 
+            color={Theme.colors.secondary.DEFAULT} 
+          />
+        </TouchableOpacity>
+      )}
+      
+      {/* Expanded Content */}
+      <Animated.View 
+        style={[
+          styles.expandedContent,
+          {
+            opacity: animatedHeight,
+            maxHeight: animatedHeight.interpolate({
+              inputRange: [0, 1],
+              outputRange: [0, 300],
+            }),
+          }
+        ]}
+      >
+        {isExpanded && (
+          <View>
+            {alert.explanation && (
+              <View style={styles.explanationSection}>
+                <Text style={styles.sectionTitle}>Explanation</Text>
+                <Text style={styles.explanationText}>{alert.explanation}</Text>
+              </View>
+            )}
+            
+            {alert.relatedFactors && alert.relatedFactors.length > 0 && (
+              <View style={styles.factorsSection}>
+                <Text style={styles.sectionTitle}>Related Factors</Text>
+                {alert.relatedFactors.map((factor, index) => (
+                  <Text key={index} style={styles.factorText}>• {factor}</Text>
+                ))}
+              </View>
+            )}
+            
+            <View style={styles.expandedActions}>
+              {/* Was This Helpful Section */}
+              <View style={styles.helpfulSection}>
+                <Text style={styles.helpfulTitle}>Was this helpful?</Text>
+                <View style={styles.helpfulButtons}>
+                  <TouchableOpacity 
+                    style={styles.helpfulButton}
+                    onPress={() => onMarkHelpful?.(alert.id, true)}
+                    testID="helpful-yes-button"
+                  >
+                    <Icon name="thumb-up" size={16} color={Theme.colors.success} />
+                    <Text style={styles.helpfulButtonText}>Yes</Text>
+                  </TouchableOpacity>
+                  
+                  <TouchableOpacity 
+                    style={styles.helpfulButton}
+                    onPress={() => onMarkHelpful?.(alert.id, false)}
+                    testID="helpful-no-button"
+                  >
+                    <Icon name="thumb-down" size={16} color={Theme.colors.error} />
+                    <Text style={styles.helpfulButtonText}>No</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+              
+              {/* Tell Me More Button */}
+              <Button
+                testID="tell-me-more-button"
+                title="Tell Me More"
+                onPress={() => onTellMeMore?.(alert.id)}
+                variant="primary"
+                size="sm"
+                icon="search"
+                style={{ marginTop: Theme.spacing.sm }}
+              />
+            </View>
+          </View>
+        )}
+      </Animated.View>
 
       {alert.acknowledged ? (
         <View style={styles.acknowledgedContainer}>
@@ -84,78 +194,71 @@ export function AlertCard({ alert, onPress, onAcknowledge, onDismiss }: AlertCar
         </View>
       ) : (
         <View style={styles.actions}>
-          <TouchableOpacity
+          <Button
             testID="acknowledge-button"
-            style={[styles.actionButton, styles.acknowledgeButton]}
+            title="Acknowledge"
             onPress={() => onAcknowledge(alert.id)}
-          >
-            <Text style={styles.acknowledgeButtonText}>Acknowledge</Text>
-          </TouchableOpacity>
+            variant="primary"
+            size="sm"
+            icon="check"
+            style={{ marginRight: Theme.spacing.sm }}
+          />
           
-          <TouchableOpacity
+          <Button
             testID="dismiss-button"
-            style={[styles.actionButton, styles.dismissButton]}
+            title="Dismiss"
             onPress={() => onDismiss(alert.id)}
-          >
-            <Text style={styles.dismissButtonText}>Dismiss</Text>
-          </TouchableOpacity>
+            variant="secondary"
+            size="sm"
+            icon="close"
+          />
         </View>
       )}
-    </TouchableOpacity>
+    </Card>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 8,
     borderLeftWidth: 4,
-    padding: 16,
-    marginVertical: 4,
-    marginHorizontal: 16,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 1,
-    },
-    shadowOpacity: 0.22,
-    shadowRadius: 2.22,
-    elevation: 3,
+    padding: Theme.spacing.md,
+    marginVertical: Theme.spacing.xs,
+    marginHorizontal: Theme.spacing.md,
   },
   header: {
-    marginBottom: 8,
+    marginBottom: Theme.spacing.sm,
   },
   titleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 4,
+    marginBottom: Theme.spacing.xs,
   },
   title: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
+    fontSize: Theme.typography.fontSize.base,
+    fontFamily: Theme.typography.fontFamily.semibold,
+    color: Theme.colors.neutral[900],
     flex: 1,
   },
   unreadIndicator: {
     width: 8,
     height: 8,
-    borderRadius: 4,
-    backgroundColor: '#3B82F6',
-    marginLeft: 8,
+    borderRadius: Theme.borderRadius.full,
+    backgroundColor: Theme.colors.secondary.DEFAULT,
+    marginLeft: Theme.spacing.sm,
   },
   actionRequiredIndicator: {
     width: 20,
     height: 20,
-    borderRadius: 10,
-    backgroundColor: '#EF4444',
+    borderRadius: Theme.borderRadius.full,
+    backgroundColor: Theme.colors.primary.DEFAULT,
     alignItems: 'center',
     justifyContent: 'center',
-    marginLeft: 8,
+    marginLeft: Theme.spacing.sm,
   },
   actionRequiredText: {
-    color: '#FFFFFF',
-    fontSize: 12,
-    fontWeight: 'bold',
+    color: Theme.colors.white,
+    fontSize: Theme.typography.fontSize.xs,
+    fontFamily: Theme.typography.fontFamily.bold,
   },
   metaRow: {
     flexDirection: 'row',
@@ -163,54 +266,110 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   priority: {
-    fontSize: 12,
-    fontWeight: '600',
+    fontSize: Theme.typography.fontSize.xs,
+    fontFamily: Theme.typography.fontFamily.semibold,
     textTransform: 'uppercase',
   },
   timestamp: {
-    fontSize: 12,
-    color: '#6B7280',
+    fontSize: Theme.typography.fontSize.xs,
+    color: Theme.colors.neutral[500],
   },
   message: {
-    fontSize: 14,
-    color: '#374151',
-    lineHeight: 20,
-    marginBottom: 12,
+    fontSize: Theme.typography.fontSize.sm,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[700],
+    lineHeight: Theme.typography.fontSize.sm * Theme.typography.lineHeight.normal,
+    marginBottom: Theme.spacing.sm,
   },
   acknowledgedContainer: {
-    paddingVertical: 8,
+    paddingVertical: Theme.spacing.sm,
   },
   acknowledgedText: {
-    fontSize: 14,
-    color: '#10B981',
-    fontWeight: '500',
+    fontSize: Theme.typography.fontSize.sm,
+    fontFamily: Theme.typography.fontFamily.medium,
+    color: Theme.colors.success,
   },
   actions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
-    gap: 8,
   },
-  actionButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 6,
-    minWidth: 80,
+  expandButton: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: Theme.spacing.sm,
+    marginBottom: Theme.spacing.sm,
   },
-  acknowledgeButton: {
-    backgroundColor: '#3B82F6',
+  expandButtonText: {
+    color: Theme.colors.secondary.DEFAULT,
+    fontSize: Theme.typography.fontSize.sm,
+    fontFamily: Theme.typography.fontFamily.medium,
+    marginRight: Theme.spacing.xs,
   },
-  acknowledgeButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
+  expandedContent: {
+    overflow: 'hidden',
   },
-  dismissButton: {
-    backgroundColor: '#EF4444',
+  explanationSection: {
+    marginBottom: Theme.spacing.sm,
+    paddingTop: Theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.neutral[200],
   },
-  dismissButtonText: {
-    color: '#FFFFFF',
-    fontSize: 14,
-    fontWeight: '500',
+  sectionTitle: {
+    fontSize: Theme.typography.fontSize.sm,
+    fontFamily: Theme.typography.fontFamily.semibold,
+    color: Theme.colors.neutral[700],
+    marginBottom: Theme.spacing.xs,
+  },
+  explanationText: {
+    fontSize: Theme.typography.fontSize.sm,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[600],
+    lineHeight: Theme.typography.fontSize.sm * Theme.typography.lineHeight.normal,
+  },
+  factorsSection: {
+    marginBottom: Theme.spacing.sm,
+  },
+  factorText: {
+    fontSize: Theme.typography.fontSize.sm,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[600],
+    lineHeight: Theme.typography.fontSize.sm * Theme.typography.lineHeight.normal,
+    marginBottom: Theme.spacing.xs / 2,
+  },
+  expandedActions: {
+    marginTop: Theme.spacing.sm,
+    paddingTop: Theme.spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.neutral[200],
+  },
+  helpfulSection: {
+    marginBottom: Theme.spacing.sm,
+  },
+  helpfulTitle: {
+    fontSize: Theme.typography.fontSize.sm,
+    fontFamily: Theme.typography.fontFamily.medium,
+    color: Theme.colors.neutral[700],
+    marginBottom: Theme.spacing.xs,
+  },
+  helpfulButtons: {
+    flexDirection: 'row',
+    gap: Theme.spacing.sm,
+  },
+  helpfulButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: Theme.spacing.sm,
+    paddingVertical: Theme.spacing.xs,
+    borderRadius: Theme.borderRadius.sm,
+    backgroundColor: Theme.colors.neutral[50],
+    borderWidth: 1,
+    borderColor: Theme.colors.neutral[200],
+  },
+  helpfulButtonText: {
+    fontSize: Theme.typography.fontSize.xs,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[700],
+    marginLeft: Theme.spacing.xs,
   },
 });

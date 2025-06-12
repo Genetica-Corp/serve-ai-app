@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
-import { Alert, AlertState, AlertAction, AlertFilters } from '../../types';
+import { Alert, AlertState, AlertAction, AlertFilters, AssignmentHistoryEntry, CureStep } from '../types';
 
 // Initial state
 const initialState: AlertState = {
@@ -134,10 +134,10 @@ function alertReducer(state: AlertState, action: AlertAction): AlertState {
               ...alert, 
               status: 'ACKNOWLEDGED' as const,
               acknowledged: true,
-              acknowledgedAt: timestamp,
+              acknowledgedAt: new Date(timestamp),
               acknowledgedBy: userId,
               read: true,
-              readAt: alert.readAt || timestamp,
+              readAt: alert.readAt || new Date(timestamp),
             }
           : alert
       );
@@ -154,7 +154,7 @@ function alertReducer(state: AlertState, action: AlertAction): AlertState {
               ...alert, 
               status: 'RESOLVED' as const,
               resolved: true,
-              resolvedAt: timestamp,
+              resolvedAt: new Date(timestamp),
             }
           : alert
       );
@@ -171,7 +171,40 @@ function alertReducer(state: AlertState, action: AlertAction): AlertState {
               ...alert, 
               status: 'DISMISSED' as const,
               dismissed: true,
-              dismissedAt: timestamp,
+              dismissedAt: new Date(timestamp),
+            }
+          : alert
+      );
+
+      return alertReducer(state, { type: 'SET_ALERTS', payload: updatedAlerts });
+    }
+    
+    case 'DISMISS_UNTIL_REFRESH': {
+      const alertId = action.payload;
+      const updatedAlerts = state.alerts.map(alert => 
+        alert.id === alertId 
+          ? { 
+              ...alert, 
+              dismissedUntilRefresh: true,
+            }
+          : alert
+      );
+
+      return alertReducer(state, { type: 'SET_ALERTS', payload: updatedAlerts });
+    }
+    
+    case 'MARK_HELPFUL': {
+      const { id, helpful } = action.payload;
+      const updatedAlerts = state.alerts.map(alert => 
+        alert.id === id 
+          ? { 
+              ...alert, 
+              helpfulVotes: helpful 
+                ? (alert.helpfulVotes || 0) + 1 
+                : alert.helpfulVotes || 0,
+              notHelpfulVotes: !helpful 
+                ? (alert.notHelpfulVotes || 0) + 1 
+                : alert.notHelpfulVotes || 0,
             }
           : alert
       );
@@ -187,18 +220,138 @@ function alertReducer(state: AlertState, action: AlertAction): AlertState {
           ? { 
               ...alert, 
               read: true,
-              readAt: timestamp,
+              readAt: new Date(timestamp),
             }
           : alert
       );
 
-      return alertReducer(state, { type: 'UPDATE_ALERT', payload: { id: alertId, updates: { read: true, readAt: timestamp } } });
+      return alertReducer(state, { type: 'UPDATE_ALERT', payload: { id: alertId, updates: { read: true, readAt: new Date(timestamp) } } });
+    }
+
+    case 'ASSIGN_ALERT': {
+      const { alertId, assignedTo, assignedToName, assignedBy, assignedByName } = action.payload;
+      const timestamp = new Date();
+      const updatedAlerts = state.alerts.map(alert => {
+        if (alert.id === alertId) {
+          const historyEntry: AssignmentHistoryEntry = {
+            assignedTo,
+            assignedToName,
+            assignedBy,
+            assignedByName,
+            assignedAt: timestamp,
+            action: 'assigned',
+          };
+          return {
+            ...alert,
+            assignedTo,
+            assignedToName,
+            assignedBy,
+            assignedByName,
+            assignedAt: timestamp,
+            assignmentHistory: [...(alert.assignmentHistory || []), historyEntry],
+          };
+        }
+        return alert;
+      });
+
+      return alertReducer(state, { type: 'SET_ALERTS', payload: updatedAlerts });
+    }
+
+    case 'REASSIGN_ALERT': {
+      const { alertId, assignedTo, assignedToName, assignedBy, assignedByName, reason } = action.payload;
+      const timestamp = new Date();
+      const updatedAlerts = state.alerts.map(alert => {
+        if (alert.id === alertId) {
+          const historyEntry: AssignmentHistoryEntry = {
+            assignedTo,
+            assignedToName,
+            assignedBy,
+            assignedByName,
+            assignedAt: timestamp,
+            action: 'reassigned',
+            reason,
+          };
+          return {
+            ...alert,
+            assignedTo,
+            assignedToName,
+            assignedBy,
+            assignedByName,
+            assignedAt: timestamp,
+            assignmentHistory: [...(alert.assignmentHistory || []), historyEntry],
+          };
+        }
+        return alert;
+      });
+
+      return alertReducer(state, { type: 'SET_ALERTS', payload: updatedAlerts });
+    }
+
+    case 'UNASSIGN_ALERT': {
+      const { alertId, unassignedBy } = action.payload;
+      const timestamp = new Date();
+      const updatedAlerts = state.alerts.map(alert => {
+        if (alert.id === alertId) {
+          const historyEntry: AssignmentHistoryEntry = {
+            assignedTo: '',
+            assignedToName: 'Unassigned',
+            assignedBy: unassignedBy,
+            assignedByName: unassignedBy, // In real app, would look up name
+            assignedAt: timestamp,
+            action: 'unassigned',
+          };
+          return {
+            ...alert,
+            assignedTo: undefined,
+            assignedToName: undefined,
+            assignedBy: undefined,
+            assignedByName: undefined,
+            assignedAt: undefined,
+            assignmentHistory: [...(alert.assignmentHistory || []), historyEntry],
+          };
+        }
+        return alert;
+      });
+
+      return alertReducer(state, { type: 'SET_ALERTS', payload: updatedAlerts });
+    }
+
+    case 'UPDATE_CURE_STEP': {
+      const { alertId, stepId, updates } = action.payload;
+      const updatedAlerts = state.alerts.map(alert => {
+        if (alert.id === alertId && alert.cureSteps) {
+          const updatedSteps = alert.cureSteps.map(step =>
+            step.id === stepId ? { ...step, ...updates } : step
+          );
+          return { ...alert, cureSteps: updatedSteps };
+        }
+        return alert;
+      });
+
+      return alertReducer(state, { type: 'SET_ALERTS', payload: updatedAlerts });
+    }
+
+    case 'ADD_RESOLUTION_NOTES': {
+      const { alertId, notes } = action.payload;
+      const updatedAlerts = state.alerts.map(alert =>
+        alert.id === alertId
+          ? { ...alert, resolutionNotes: notes }
+          : alert
+      );
+
+      return alertReducer(state, { type: 'SET_ALERTS', payload: updatedAlerts });
     }
 
     case 'SET_FILTERS':
       return {
         ...state,
         filters: action.payload,
+      };
+
+    case 'UPDATE_FILTERS':
+      return {
+        ...state,
+        filters: { ...state.filters, ...action.payload },
       };
 
     case 'SET_LOADING':
@@ -237,11 +390,21 @@ interface AlertContextType {
   acknowledgeAlert: (id: string, userId: string) => void;
   resolveAlert: (id: string) => void;
   dismissAlert: (id: string) => void;
+  dismissUntilRefresh: (id: string) => void;
   markAsRead: (id: string) => void;
+  markAsHelpful: (id: string, helpful: boolean) => void;
   setFilters: (filters: AlertFilters) => void;
+  updateFilters: (filters: Partial<AlertFilters>) => void;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
   clearAlerts: () => void;
+  
+  // Assignment methods
+  assignAlert: (alertId: string, assignedTo: string, assignedToName: string, assignedBy: string, assignedByName: string) => void;
+  reassignAlert: (alertId: string, assignedTo: string, assignedToName: string, assignedBy: string, assignedByName: string, reason?: string) => void;
+  unassignAlert: (alertId: string, unassignedBy: string) => void;
+  updateCureStep: (alertId: string, stepId: string, updates: Partial<CureStep>) => void;
+  addResolutionNotes: (alertId: string, notes: string) => void;
   
   // Computed properties
   getFilteredAlerts: () => Alert[];
@@ -287,9 +450,17 @@ export function AlertProvider({ children }: AlertProviderProps) {
   const dismissAlert = (id: string) => {
     dispatch({ type: 'DISMISS_ALERT', payload: id });
   };
+  
+  const dismissUntilRefresh = (id: string) => {
+    dispatch({ type: 'DISMISS_UNTIL_REFRESH', payload: id });
+  };
 
   const markAsRead = (id: string) => {
     dispatch({ type: 'MARK_READ', payload: id });
+  };
+  
+  const markAsHelpful = (id: string, helpful: boolean) => {
+    dispatch({ type: 'MARK_HELPFUL', payload: { id, helpful } });
   };
 
   const setFilters = (filters: AlertFilters) => {
@@ -308,10 +479,38 @@ export function AlertProvider({ children }: AlertProviderProps) {
     dispatch({ type: 'CLEAR_ALERTS' });
   };
 
+  const updateFilters = (filters: Partial<AlertFilters>) => {
+    dispatch({ type: 'UPDATE_FILTERS', payload: filters });
+  };
+
+  // Assignment methods
+  const assignAlert = (alertId: string, assignedTo: string, assignedToName: string, assignedBy: string, assignedByName: string) => {
+    dispatch({ type: 'ASSIGN_ALERT', payload: { alertId, assignedTo, assignedToName, assignedBy, assignedByName } });
+  };
+
+  const reassignAlert = (alertId: string, assignedTo: string, assignedToName: string, assignedBy: string, assignedByName: string, reason?: string) => {
+    dispatch({ type: 'REASSIGN_ALERT', payload: { alertId, assignedTo, assignedToName, assignedBy, assignedByName, reason } });
+  };
+
+  const unassignAlert = (alertId: string, unassignedBy: string) => {
+    dispatch({ type: 'UNASSIGN_ALERT', payload: { alertId, unassignedBy } });
+  };
+
+  const updateCureStep = (alertId: string, stepId: string, updates: Partial<CureStep>) => {
+    dispatch({ type: 'UPDATE_CURE_STEP', payload: { alertId, stepId, updates } });
+  };
+
+  const addResolutionNotes = (alertId: string, notes: string) => {
+    dispatch({ type: 'ADD_RESOLUTION_NOTES', payload: { alertId, notes } });
+  };
+
   // Filter alerts based on current filters
   const getFilteredAlerts = (): Alert[] => {
     let filtered = state.alerts;
     const { filters } = state;
+    
+    // Filter out dismissed until refresh alerts
+    filtered = filtered.filter(alert => !alert.dismissedUntilRefresh);
 
     // Priority filter
     if (filters.priority && filters.priority.length > 0) {
@@ -363,6 +562,20 @@ export function AlertProvider({ children }: AlertProviderProps) {
       filtered = filtered.filter(alert => !alert.resolved);
     }
 
+    // Assignment filters
+    if (filters.assignedToMe !== undefined && filters.assignedToMe) {
+      // This would use the current user's ID in a real app
+      filtered = filtered.filter(alert => alert.assignedTo !== undefined);
+    }
+
+    if (filters.unassigned) {
+      filtered = filtered.filter(alert => !alert.assignedTo);
+    }
+
+    if (filters.assignedTo) {
+      filtered = filtered.filter(alert => alert.assignedTo === filters.assignedTo);
+    }
+
     return filtered;
   };
 
@@ -398,11 +611,19 @@ export function AlertProvider({ children }: AlertProviderProps) {
     acknowledgeAlert,
     resolveAlert,
     dismissAlert,
+    dismissUntilRefresh,
     markAsRead,
+    markAsHelpful,
     setFilters,
+    updateFilters,
     setLoading,
     setError,
     clearAlerts,
+    assignAlert,
+    reassignAlert,
+    unassignAlert,
+    updateCureStep,
+    addResolutionNotes,
     getFilteredAlerts,
     getAlertById,
     getAlertsByType,
@@ -427,4 +648,4 @@ export function useAlerts(): AlertContextType {
   return context;
 }
 
-export default AlertContext;
+export { AlertContext };
