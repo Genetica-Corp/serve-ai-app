@@ -5,6 +5,8 @@ import {
   StyleSheet,
   TouchableOpacity,
   Alert,
+  Image,
+  ScrollView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -13,6 +15,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { RootStackParamList } from '../types';
 import { useUser } from '../contexts/UserContext';
 import UserService from '../services/UserService';
+import { Theme } from '../theme';
+import { Card } from '../components/ui/Card';
+import { Button } from '../components/ui/Button';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'Home'>;
 
@@ -49,57 +54,82 @@ const RoleSelectionScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Serve AI</Text>
-        <Text style={styles.subtitle}>Restaurant Alert Management</Text>
-      </View>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.header}>
+          <Image
+            source={require('../../assets/serve-ai-logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>Serve AI</Text>
+          <Text style={styles.subtitle}>Restaurant Alert Management</Text>
+        </View>
 
-      <View style={styles.content}>
-        <Text style={styles.sectionTitle}>Select Your Role</Text>
-        <Text style={styles.sectionDescription}>
-          Choose how you want to view the dashboard
-        </Text>
-
-        <TouchableOpacity
-          style={[styles.roleCard, styles.operatorCard]}
-          onPress={() => handleRoleSelection('operator')}
-        >
-          <Ionicons name="people" size={48} color="#FFF" />
-          <Text style={styles.roleTitle}>Operator</Text>
-          <Text style={styles.roleDescription}>
-            Manage alerts and assign them to team members
+        <View style={styles.content}>
+          <Text style={styles.sectionTitle}>Select Your Role</Text>
+          <Text style={styles.sectionDescription}>
+            Choose how you want to view the dashboard
           </Text>
-          <View style={styles.roleFeatures}>
-            <Text style={styles.featureItem}>• View all alerts</Text>
-            <Text style={styles.featureItem}>• Assign to team members</Text>
-            <Text style={styles.featureItem}>• Track assignments</Text>
-            <Text style={styles.featureItem}>• Manage team</Text>
-          </View>
-        </TouchableOpacity>
 
-        <TouchableOpacity
-          style={[styles.roleCard, styles.managerCard]}
-          onPress={() => handleRoleSelection('manager')}
-        >
-          <Ionicons name="person" size={48} color="#FFF" />
-          <Text style={styles.roleTitle}>Store Manager</Text>
-          <Text style={styles.roleDescription}>
-            View and resolve alerts assigned to you
+          <Card
+            style={[styles.roleCard, styles.operatorCard]}
+            onPress={() => handleRoleSelection('operator')}
+          >
+            <View style={styles.roleIconContainer}>
+              <Ionicons name="people" size={48} color={Theme.colors.white} />
+            </View>
+            <Text style={styles.roleTitle}>Operator</Text>
+            <Text style={styles.roleDescription}>
+              Manage alerts and assign them to team members
+            </Text>
+            <View style={styles.roleFeatures}>
+              <Text style={styles.featureItem}>• View all alerts</Text>
+              <Text style={styles.featureItem}>• Assign to team members</Text>
+              <Text style={styles.featureItem}>• Track assignments</Text>
+              <Text style={styles.featureItem}>• Manage team</Text>
+            </View>
+            <Button
+              title="Continue as Operator"
+              onPress={() => handleRoleSelection('operator')}
+              variant="secondary"
+              size="md"
+              style={{ marginTop: Theme.spacing.md, width: '100%' }}
+            />
+          </Card>
+
+          <Card
+            style={[styles.roleCard, styles.managerCard]}
+            onPress={() => handleRoleSelection('manager')}
+          >
+            <View style={styles.roleIconContainer}>
+              <Ionicons name="person" size={48} color={Theme.colors.white} />
+            </View>
+            <Text style={styles.roleTitle}>Store Manager</Text>
+            <Text style={styles.roleDescription}>
+              View and resolve alerts assigned to you
+            </Text>
+            <View style={styles.roleFeatures}>
+              <Text style={styles.featureItem}>• View assigned alerts</Text>
+              <Text style={styles.featureItem}>• Track cure steps</Text>
+              <Text style={styles.featureItem}>• Add resolution notes</Text>
+              <Text style={styles.featureItem}>• Mark as resolved</Text>
+            </View>
+            <Button
+              title="Continue as Store Manager"
+              onPress={() => handleRoleSelection('manager')}
+              variant="secondary"
+              size="md"
+              style={{ marginTop: Theme.spacing.md, width: '100%' }}
+            />
+          </Card>
+        </View>
+
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>
+            This is a demo. In production, you would log in with your credentials.
           </Text>
-          <View style={styles.roleFeatures}>
-            <Text style={styles.featureItem}>• View assigned alerts</Text>
-            <Text style={styles.featureItem}>• Track cure steps</Text>
-            <Text style={styles.featureItem}>• Add resolution notes</Text>
-            <Text style={styles.featureItem}>• Mark as resolved</Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>
-          This is a demo. In production, you would log in with your credentials.
-        </Text>
-      </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 };
@@ -107,84 +137,116 @@ const RoleSelectionScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Theme.colors.neutral[50],
+  },
+  scrollContainer: {
+    flexGrow: 1,
   },
   header: {
     alignItems: 'center',
-    paddingVertical: 40,
+    paddingVertical: Theme.spacing['2xl'],
+    paddingTop: Theme.spacing['3xl'],
+  },
+  logo: {
+    width: 80,
+    height: 80,
+    marginBottom: Theme.spacing.md,
   },
   title: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: Theme.typography.fontSize['4xl'],
+    fontFamily: Theme.typography.fontFamily.bold,
+    color: Theme.colors.neutral[900],
+    letterSpacing: -0.5,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginTop: 8,
+    fontSize: Theme.typography.fontSize.lg,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[600],
+    marginTop: Theme.spacing.sm,
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
+    paddingHorizontal: Theme.spacing.lg,
   },
   sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: Theme.typography.fontSize['2xl'],
+    fontFamily: Theme.typography.fontFamily.semibold,
+    color: Theme.colors.neutral[900],
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: Theme.spacing.sm,
   },
   sectionDescription: {
-    fontSize: 16,
-    color: '#666',
+    fontSize: Theme.typography.fontSize.base,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[600],
     textAlign: 'center',
-    marginBottom: 32,
+    marginBottom: Theme.spacing.xl,
   },
   roleCard: {
-    padding: 24,
-    borderRadius: 16,
-    marginBottom: 20,
+    padding: Theme.spacing.lg,
+    marginBottom: Theme.spacing.lg,
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    borderWidth: 0,
     shadowOpacity: 0.1,
     shadowRadius: 8,
   },
+  roleIconContainer: {
+    width: 80,
+    height: 80,
+    borderRadius: Theme.borderRadius.full,
+    backgroundColor: Theme.colors.primary.DEFAULT,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Theme.spacing.md,
+    ...Theme.shadows.md,
+  },
   operatorCard: {
-    backgroundColor: '#1976D2',
+    backgroundColor: Theme.colors.white,
+    borderWidth: 1,
+    borderColor: Theme.colors.primary[100],
   },
   managerCard: {
-    backgroundColor: '#388E3C',
+    backgroundColor: Theme.colors.white,
+    borderWidth: 1,
+    borderColor: Theme.colors.secondary[100],
   },
   roleTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFF',
-    marginTop: 16,
-    marginBottom: 8,
+    fontSize: Theme.typography.fontSize.xl,
+    fontFamily: Theme.typography.fontFamily.semibold,
+    color: Theme.colors.neutral[900],
+    marginTop: Theme.spacing.sm,
+    marginBottom: Theme.spacing.sm,
   },
   roleDescription: {
-    fontSize: 16,
-    color: '#E3F2FD',
+    fontSize: Theme.typography.fontSize.sm,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[600],
     textAlign: 'center',
-    marginBottom: 16,
+    marginBottom: Theme.spacing.md,
+    lineHeight: Theme.typography.fontSize.sm * Theme.typography.lineHeight.normal,
   },
   roleFeatures: {
-    marginTop: 8,
+    alignSelf: 'stretch',
+    backgroundColor: Theme.colors.neutral[50],
+    padding: Theme.spacing.md,
+    borderRadius: Theme.borderRadius.md,
+    marginBottom: Theme.spacing.md,
   },
   featureItem: {
-    fontSize: 14,
-    color: '#FFF',
-    marginVertical: 4,
+    fontSize: Theme.typography.fontSize.sm,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[700],
+    marginBottom: Theme.spacing.xs,
+    lineHeight: Theme.typography.fontSize.sm * Theme.typography.lineHeight.relaxed,
   },
   footer: {
-    padding: 20,
+    padding: Theme.spacing.lg,
     alignItems: 'center',
   },
   footerText: {
-    fontSize: 12,
-    color: '#999',
+    fontSize: Theme.typography.fontSize.xs,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[500],
     textAlign: 'center',
   },
 });

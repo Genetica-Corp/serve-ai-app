@@ -22,6 +22,9 @@ import LoadingSpinner from '../components/LoadingSpinner';
 import EmptyState from '../components/EmptyState';
 import UserService from '../services/UserService';
 import AssignmentService from '../services/AssignmentService';
+import { Theme, withOpacity } from '../theme';
+import { Button } from '../components/ui/Button';
+import { Card } from '../components/ui/Card';
 
 type NavigationProp = StackNavigationProp<RootStackParamList, 'Dashboard'>;
 
@@ -123,11 +126,11 @@ const OperatorDashboard: React.FC = () => {
       <View style={styles.memberInfo}>
         <Text style={styles.memberName}>{item.name}</Text>
         <Text style={styles.memberRole}>{item.role.replace('_', ' ')}</Text>
-        <Text style={[styles.memberStatus, { color: item.status === 'ACTIVE' ? '#4CAF50' : '#FF9800' }]}>
+        <Text style={[styles.memberStatus, { color: item.status === 'ACTIVE' ? Theme.colors.success : Theme.colors.warning }]}>
           {item.status}
         </Text>
       </View>
-      <Ionicons name="chevron-forward" size={20} color="#666" />
+      <Ionicons name="chevron-forward" size={20} color={Theme.colors.neutral[400]} />
     </TouchableOpacity>
   );
 
@@ -144,11 +147,11 @@ const OperatorDashboard: React.FC = () => {
           <Text style={styles.metricLabel}>Total Alerts</Text>
         </View>
         <View style={styles.metricCard}>
-          <Text style={[styles.metricValue, { color: '#FF5722' }]}>{metrics.unassigned}</Text>
+          <Text style={[styles.metricValue, { color: Theme.colors.error }]}>{metrics.unassigned}</Text>
           <Text style={styles.metricLabel}>Unassigned</Text>
         </View>
         <View style={styles.metricCard}>
-          <Text style={[styles.metricValue, { color: '#4CAF50' }]}>{metrics.assigned}</Text>
+          <Text style={[styles.metricValue, { color: Theme.colors.success }]}>{metrics.assigned}</Text>
           <Text style={styles.metricLabel}>Assigned</Text>
         </View>
         <View style={styles.metricCard}>
@@ -210,13 +213,13 @@ const OperatorDashboard: React.FC = () => {
                   style={styles.assignButton}
                   onPress={() => handleAssignAlert(alert)}
                 >
-                  <Ionicons name="person-add" size={16} color="#FFF" />
+                  <Ionicons name="person-add" size={16} color={Theme.colors.white} />
                   <Text style={styles.assignButtonText}>Assign</Text>
                 </TouchableOpacity>
               )}
               {alert.assignedTo && (
                 <View style={styles.assignedInfo}>
-                  <Ionicons name="person" size={14} color="#666" />
+                  <Ionicons name="person" size={14} color={Theme.colors.neutral[500]} />
                   <Text style={styles.assignedText}>
                     Assigned to {alert.assignedToName}
                   </Text>
@@ -241,7 +244,7 @@ const OperatorDashboard: React.FC = () => {
                 onPress={() => setAssignModalVisible(false)}
                 style={styles.closeButton}
               >
-                <Ionicons name="close" size={24} color="#333" />
+                <Ionicons name="close" size={24} color={Theme.colors.neutral[900]} />
               </TouchableOpacity>
             </View>
             
@@ -270,175 +273,181 @@ const OperatorDashboard: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: Theme.colors.neutral[50],
   },
   header: {
-    backgroundColor: '#1976D2',
-    padding: 20,
-    paddingTop: 10,
+    backgroundColor: Theme.colors.primary.DEFAULT,
+    padding: Theme.spacing.lg,
+    paddingTop: Theme.spacing.sm,
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#FFF',
+    fontSize: Theme.typography.fontSize['2xl'],
+    fontFamily: Theme.typography.fontFamily.bold,
+    color: Theme.colors.white,
   },
   subtitle: {
-    fontSize: 16,
-    color: '#E3F2FD',
-    marginTop: 4,
+    fontSize: Theme.typography.fontSize.base,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: withOpacity(Theme.colors.white, 0.9),
+    marginTop: Theme.spacing.xs,
   },
   metricsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: 20,
-    backgroundColor: '#FFF',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
+    paddingVertical: Theme.spacing.lg,
+    backgroundColor: Theme.colors.white,
+    ...Theme.shadows.md,
   },
   metricCard: {
     alignItems: 'center',
   },
   metricValue: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: Theme.typography.fontSize['3xl'],
+    fontFamily: Theme.typography.fontFamily.bold,
+    color: Theme.colors.neutral[900],
   },
   metricLabel: {
-    fontSize: 12,
-    color: '#666',
-    marginTop: 4,
+    fontSize: Theme.typography.fontSize.xs,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[600],
+    marginTop: Theme.spacing.xs,
   },
   filterContainer: {
     flexDirection: 'row',
-    padding: 16,
-    backgroundColor: '#FFF',
+    padding: Theme.spacing.md,
+    backgroundColor: Theme.colors.white,
     marginTop: 1,
+    ...Theme.shadows.sm,
   },
   filterButton: {
     flex: 1,
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    marginHorizontal: 4,
-    borderRadius: 20,
+    paddingVertical: Theme.spacing.sm,
+    paddingHorizontal: Theme.spacing.md,
+    marginHorizontal: Theme.spacing.xs,
+    borderRadius: Theme.borderRadius.full,
     borderWidth: 1,
-    borderColor: '#DDD',
+    borderColor: Theme.colors.neutral[200],
     alignItems: 'center',
   },
   filterButtonActive: {
-    backgroundColor: '#1976D2',
-    borderColor: '#1976D2',
+    backgroundColor: Theme.colors.primary.DEFAULT,
+    borderColor: Theme.colors.primary.DEFAULT,
   },
   filterText: {
-    fontSize: 14,
-    color: '#666',
+    fontSize: Theme.typography.fontSize.sm,
+    fontFamily: Theme.typography.fontFamily.medium,
+    color: Theme.colors.neutral[600],
   },
   filterTextActive: {
-    color: '#FFF',
-    fontWeight: '600',
+    color: Theme.colors.white,
+    fontFamily: Theme.typography.fontFamily.semibold,
   },
   alertsList: {
     flex: 1,
-    padding: 16,
+    padding: Theme.spacing.md,
   },
   alertWrapper: {
-    marginBottom: 12,
+    marginBottom: Theme.spacing.sm,
   },
   assignButton: {
     position: 'absolute',
-    top: 12,
-    right: 12,
-    backgroundColor: '#2196F3',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
+    top: Theme.spacing.sm,
+    right: Theme.spacing.sm,
+    backgroundColor: Theme.colors.secondary.DEFAULT,
+    paddingHorizontal: Theme.spacing.sm,
+    paddingVertical: Theme.spacing.xs,
+    borderRadius: Theme.borderRadius.full,
     flexDirection: 'row',
     alignItems: 'center',
+    ...Theme.shadows.sm,
   },
   assignButtonText: {
-    color: '#FFF',
-    fontSize: 12,
-    fontWeight: '600',
-    marginLeft: 4,
+    color: Theme.colors.white,
+    fontSize: Theme.typography.fontSize.xs,
+    fontFamily: Theme.typography.fontFamily.semibold,
+    marginLeft: Theme.spacing.xs,
   },
   assignedInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingHorizontal: Theme.spacing.md,
+    paddingTop: Theme.spacing.sm,
   },
   assignedText: {
-    fontSize: 12,
-    color: '#666',
-    marginLeft: 4,
+    fontSize: Theme.typography.fontSize.xs,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[600],
+    marginLeft: Theme.spacing.xs,
   },
   modalOverlay: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: withOpacity(Theme.colors.black, 0.5),
     justifyContent: 'flex-end',
   },
   modalContent: {
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    paddingTop: 20,
+    backgroundColor: Theme.colors.white,
+    borderTopLeftRadius: Theme.borderRadius['2xl'],
+    borderTopRightRadius: Theme.borderRadius['2xl'],
+    paddingTop: Theme.spacing.lg,
     maxHeight: '70%',
+    ...Theme.shadows.xl,
   },
   modalHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingBottom: 16,
+    paddingHorizontal: Theme.spacing.lg,
+    paddingBottom: Theme.spacing.md,
   },
   modalTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
+    fontSize: Theme.typography.fontSize.xl,
+    fontFamily: Theme.typography.fontFamily.bold,
+    color: Theme.colors.neutral[900],
   },
   modalSubtitle: {
-    fontSize: 14,
-    color: '#666',
-    paddingHorizontal: 20,
-    marginBottom: 16,
+    fontSize: Theme.typography.fontSize.sm,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[600],
+    paddingHorizontal: Theme.spacing.lg,
+    marginBottom: Theme.spacing.md,
   },
   closeButton: {
-    padding: 4,
+    padding: Theme.spacing.xs,
   },
   teamMembersList: {
-    paddingHorizontal: 20,
+    paddingHorizontal: Theme.spacing.lg,
   },
   teamMemberItem: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: 16,
+    paddingVertical: Theme.spacing.md,
     borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    borderBottomColor: Theme.colors.neutral[100],
   },
   memberInfo: {
     flex: 1,
   },
   memberName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#333',
+    fontSize: Theme.typography.fontSize.base,
+    fontFamily: Theme.typography.fontFamily.semibold,
+    color: Theme.colors.neutral[900],
   },
   memberRole: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 2,
+    fontSize: Theme.typography.fontSize.sm,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[600],
+    marginTop: Theme.spacing.xs / 2,
   },
   memberStatus: {
-    fontSize: 12,
-    fontWeight: '600',
-    marginTop: 4,
+    fontSize: Theme.typography.fontSize.xs,
+    fontFamily: Theme.typography.fontFamily.semibold,
+    marginTop: Theme.spacing.xs,
   },
   noMembersText: {
     textAlign: 'center',
-    color: '#666',
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[600],
     paddingVertical: 32,
   },
 });

@@ -4,6 +4,8 @@ import Icon from 'react-native-vector-icons/MaterialIcons';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
+import { Theme } from '../theme';
+import { navigationTheme } from './navigationTheme';
 
 // Import screens
 import { AlertDashboard } from '../screens/AlertDashboard';
@@ -33,14 +35,20 @@ function TabNavigator() {
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#14B8A6',
-        tabBarInactiveTintColor: '#6B7280',
+        tabBarActiveTintColor: Theme.colors.primary.DEFAULT,
+        tabBarInactiveTintColor: Theme.colors.neutral[500],
         tabBarStyle: {
-          backgroundColor: '#FFFFFF',
-          borderTopColor: '#E5E7EB',
-          paddingTop: 8,
-          paddingBottom: 8,
+          backgroundColor: Theme.colors.white,
+          borderTopColor: Theme.colors.neutral[200],
+          borderTopWidth: 1,
+          paddingTop: Theme.spacing.sm,
+          paddingBottom: Theme.spacing.sm,
           height: 80,
+          ...Theme.shadows.sm,
+        },
+        tabBarLabelStyle: {
+          fontSize: Theme.typography.fontSize.xs,
+          fontFamily: Theme.typography.fontFamily.medium,
         },
       }}
     >
@@ -82,20 +90,25 @@ export function AppNavigator() {
   const { currentUser } = useUser();
   
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator
         screenOptions={{
           headerStyle: {
-            backgroundColor: '#FFFFFF',
-            borderBottomColor: '#E5E7EB',
+            backgroundColor: Theme.colors.white,
+            borderBottomColor: Theme.colors.neutral[200],
             borderBottomWidth: 1,
             elevation: 0,
             shadowOpacity: 0,
+            height: 60,
           },
-          headerTintColor: '#1F2937',
+          headerTintColor: Theme.colors.neutral[900],
           headerTitleStyle: {
-            fontWeight: '600',
-            fontSize: 18,
+            fontFamily: Theme.typography.fontFamily.semibold,
+            fontSize: Theme.typography.fontSize.lg,
+          },
+          headerBackTitleStyle: {
+            fontFamily: Theme.typography.fontFamily.regular,
+            fontSize: Theme.typography.fontSize.sm,
           },
         }}
       >
@@ -119,9 +132,9 @@ export function AppNavigator() {
                   resizeMode="contain"
                 />
                 <Text style={{ 
-                  fontSize: 18, 
-                  fontWeight: '600', 
-                  color: '#1F2937' 
+                  fontSize: Theme.typography.fontSize.lg, 
+                  fontFamily: Theme.typography.fontFamily.semibold, 
+                  color: Theme.colors.neutral[900] 
                 }}>Serve AI</Text>
               </View>
             ),

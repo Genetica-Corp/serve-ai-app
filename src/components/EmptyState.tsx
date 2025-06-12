@@ -6,6 +6,8 @@ import {
   StyleSheet,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
+import { Theme } from '../theme';
+import { Button } from './ui/Button';
 
 export interface EmptyStateProps {
   title: string;
@@ -27,16 +29,19 @@ export function EmptyState({
   return (
     <View style={styles.container}>
       {iconName ? (
-        <Icon name={iconName} size={48} color="#9CA3AF" style={styles.iconContainer} />
+        <Icon name={iconName} size={48} color={Theme.colors.neutral[400]} style={styles.iconContainer} />
       ) : icon ? (
         <Text style={styles.icon}>{icon}</Text>
       ) : null}
       <Text style={styles.title}>{title}</Text>
       <Text style={styles.message}>{message}</Text>
       {actionText && onAction && (
-        <TouchableOpacity style={styles.button} onPress={onAction}>
-          <Text style={styles.buttonText}>{actionText}</Text>
-        </TouchableOpacity>
+        <Button
+          title={actionText}
+          onPress={onAction}
+          variant="primary"
+          size="md"
+        />
       )}
     </View>
   );
@@ -47,38 +52,28 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 32,
+    padding: Theme.spacing.xl,
   },
   icon: {
     fontSize: 48,
-    marginBottom: 16,
+    marginBottom: Theme.spacing.md,
   },
   iconContainer: {
-    marginBottom: 16,
+    marginBottom: Theme.spacing.md,
   },
   title: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#111827',
+    fontSize: Theme.typography.fontSize.xl,
+    fontFamily: Theme.typography.fontFamily.semibold,
+    color: Theme.colors.neutral[900],
     textAlign: 'center',
-    marginBottom: 8,
+    marginBottom: Theme.spacing.sm,
   },
   message: {
-    fontSize: 16,
-    color: '#6B7280',
+    fontSize: Theme.typography.fontSize.base,
+    fontFamily: Theme.typography.fontFamily.regular,
+    color: Theme.colors.neutral[500],
     textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 24,
-  },
-  button: {
-    backgroundColor: '#14B8A6',
-    paddingHorizontal: 24,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  buttonText: {
-    color: '#FFFFFF',
-    fontSize: 16,
-    fontWeight: '500',
+    lineHeight: Theme.typography.fontSize.base * Theme.typography.lineHeight.normal,
+    marginBottom: Theme.spacing.lg,
   },
 });
